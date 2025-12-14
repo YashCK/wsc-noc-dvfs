@@ -27,7 +27,7 @@ from typing import Iterable, Tuple
 
 NT_MAGIC = 0x484A5455
 HEADER_FMT = "<If30sBBQQII8s"  # packed header layout used by netrace
-PACKET_FMT = "<QII4B"          # cycle, id, addr, type, src, dst, node_types, num_deps
+PACKET_FMT = "<QII5B"          # cycle, id, addr, type, src, dst, node_types, num_deps
 
 
 def _pack_header(num_nodes: int, num_cycles: int, num_packets: int,
