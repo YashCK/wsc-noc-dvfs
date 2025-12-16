@@ -12,6 +12,13 @@ NUMERIC_COLS = [
 
 def load_best(csv_path: str) -> pd.DataFrame:
     df = pd.read_csv(csv_path)
+    # Ensure expected columns exist
+    for key in ["config_id", "injection_rate", "power_cap", "dvfs_epoch"]:
+        if key not in df.columns:
+            df[key] = pd.NA
+    for col in NUMERIC_COLS:
+        if col not in df.columns:
+            df[col] = pd.NA
     for c in NUMERIC_COLS:
         if c in df.columns:
             df[c] = pd.to_numeric(df[c], errors="coerce")
@@ -20,9 +27,11 @@ def load_best(csv_path: str) -> pd.DataFrame:
     def pick_best(g: pd.DataFrame) -> pd.Series:
         if g.empty:
             return pd.Series()
-        if g["control_p99"].notna().any():
+        if "control_p99" in g and g["control_p99"].notna().any():
             return g.loc[g["control_p99"].idxmin()]
-        return g.loc[g["total_power_peak"].idxmin()]
+        if "total_power_peak" in g:
+            return g.loc[g["total_power_peak"].idxmin()]
+        return g.iloc[0]
     best = df.groupby(group_keys, dropna=False).apply(pick_best).reset_index(drop=True)
     return best
 
