@@ -20,6 +20,8 @@ import argparse
 import csv
 import itertools
 import os
+import re
+import hashlib
 import subprocess
 import sys
 from typing import Dict, List, Optional, Tuple
@@ -38,6 +40,19 @@ def parse_params(param_list: List[str]) -> Dict[str, List[str]]:
     return params
 
 
+def _sanitize_run_name(name: str, max_len: int = 180) -> str:
+    if not name:
+        return "run"
+    safe = re.sub(r"[^A-Za-z0-9._-]+", "-", name)
+    safe = safe.replace(os.sep, "-").replace("/", "-")
+    safe = re.sub(r"-{2,}", "-", safe).strip("-")
+    if len(safe) <= max_len:
+        return safe
+    h = hashlib.sha1(safe.encode("utf-8")).hexdigest()[:10]
+    keep = max(1, max_len - 11)
+    return f"{safe[:keep]}-{h}"
+
+
 def run_one(booksim_bin: str, config: str, overrides: Dict[str, str],
             run_name_parts: Optional[List[str]] = None) -> Tuple[int, str]:
     run_name = overrides.get("run_name")
@@ -49,7 +64,27 @@ def run_one(booksim_bin: str, config: str, overrides: Dict[str, str],
         suffix_parts.extend([f"{k}-{v}" for k, v in overrides.items() if k not in {"output_dir"}])
         suffix = "_".join(suffix_parts)
         run_name = f"sweep_{suffix}" if suffix else "sweep_run"
-        overrides["run_name"] = run_name
+    run_name = _sanitize_run_name(run_name)
+    overrides["run_name"] = run_name
+    # BookSim resolves netrace_file relative to the process CWD. For convenience, accept
+    # either a path relative to the current working directory or (fallback) relative to
+    # the config's directory.
+    if "netrace_file" in overrides:
+        nf = overrides["netrace_file"]
+        if nf and not os.path.isabs(nf):
+            nf_cwd = os.path.abspath(nf)
+            nf_cfg = os.path.normpath(os.path.join(os.path.dirname(config), nf))
+            if os.path.exists(nf_cwd):
+                overrides["netrace_file"] = nf_cwd
+            elif os.path.exists(nf_cfg):
+                overrides["netrace_file"] = nf_cfg
+            else:
+                print(f"[ERROR] netrace_file not found: {nf} (tried {nf_cwd} and {nf_cfg})", file=sys.stderr)
+                return 1, run_name
+        elif nf and not os.path.exists(nf):
+            print(f"[ERROR] netrace_file not found: {nf}", file=sys.stderr)
+            return 1, run_name
+
     cmd = [booksim_bin, config] + [f"{k}={v}" for k, v in overrides.items()]
     print("Running:", " ".join(cmd))
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
@@ -193,12 +228,14 @@ def main():
     combos = list(itertools.product(*[param_grid[k] for k in keys])) if keys else [()]
 
     rows = []
+    had_failure = False
     for config in config_list:
         config_id = os.path.splitext(os.path.basename(config))[0] or config
         for combo in combos:
             overrides = dict(zip(keys, combo))
             rc, run_name = run_one(args.booksim_bin, config, overrides,
                                    run_name_parts=[f"cfg-{config_id}"])
+            had_failure = had_failure or (rc != 0)
             output_dir = overrides.get("output_dir", "sims")
             summary = read_summary(run_name, output_dir)
             row = {"run_name": run_name, "exit_code": rc, "config": config, "config_id": config_id}
@@ -232,6 +269,8 @@ def main():
         writer.writeheader()
         writer.writerows(rows)
     print(f"Wrote {args.output} ({len(rows)} runs)")
+    if had_failure:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
