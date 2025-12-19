@@ -1,0 +1,20 @@
+Summary: issues when combining queue_pid DVFS with netrace workloads
+
+Observed symptoms
+- With queue_pid + use_netrace and frequency scaling enabled, runs abort with packet corruption: “Received flit … with unexpected packet ID …” and “Flit … arrived at incorrect output …”.
+- Even after relaxing PID/output checks, non‑head flits arrive to empty VCs, forcing drops and eventual deadlock / “Average latency exceeded” aborts.
+- Disabling frequency scaling (dvfs_disable_freq_scale=1) lets netrace finish but defeats the purpose of DVFS experiments.
+
+Root cause status
+- Corruption appears after DVFS frequency changes while multi‑flit netrace packets are in flight; likely timing/VC reuse bug when scaling router freq mid‑run (credits/VC state not synchronized).
+- Trace format and src/dst ranges look valid; the issue is in injection/VC allocation under DVFS, not the trace parser.
+
+Mitigations tried
+- Relaxed PID/output assertions in VC/retire paths; dropped non‑head flits on empty VCs to keep simulation running. Result: simulation continues but deadlocks with many flits stuck.
+- Config tweaks: wait_for_tail_credit=1, netrace_use_addr_size toggled, single‑flit forcing; none resolved corruption with scaling on.
+- Safe mode: dvfs_disable_freq_scale=1 in flatfly_queue_pid_tuned_netrace.cfg allows completion but keeps freq at 1.0.
+
+Next steps to truly fix
+- Re‑enable strict PID/output checks and instrument netrace injection and VC allocation to log the first corruption event (pid, vc, head/tail, src/dst, router).
+- Audit VC reuse under DVFS: ensure VCs are not reassigned until tail credit returns, and that scaling does not desynchronize credit latency/bookkeeping.
+- If corruption only occurs when scaling mid‑epoch, consider pausing scaling while in‑flight packets drain or resynchronizing credits when freq changes.
