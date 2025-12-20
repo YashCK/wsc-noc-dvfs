@@ -1,0 +1,258 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{Priority-Aware NoC DVFS under Power Caps\\
+}
+
+\author{\IEEEauthorblockN{Yash Kodali}
+\IEEEauthorblockA{\textit{University of California, Berkeley} \\
+yash.kodali@berkeley.edu}
+\and
+\IEEEauthorblockN{Evan Li}
+\IEEEauthorblockA{\textit{University of California, Berkeley} \\
+evan.li@berkeley.edu}
+\and
+\IEEEauthorblockN{Nathan Sutherland}
+\IEEEauthorblockA{\textit{University of California, Berkeley} \\
+nathan.sutherland@berkeley.edu}
+}
+
+\maketitle
+
+\begin{abstract}
+As warehouse-scale systems increasingly rely on power capping to manage energy costs and infrastructure limits, Network-on-Chip (NoC) resources must be throttled efficiently. However, conventional uniform Dynamic Voltage Frequency Scaling (DVFS) policies fail to distinguish between latency-sensitive control traffic and throughput-oriented batch workloads, leading to severe tail-latency violations. As such, there is a need for strategies that enable power-constrained NoCs to provide performance efficiency for traffic classes without violating global power caps.
+
+This paper presents a Priority-Aware NoC DVFS framework designed to enforce power caps while selectively preserving the performance of critical traffic. We utilize the SNIPER multi-core simulator to generate network traces from both batch and control class benchmarks from PARSEC and TailBench++ respectively. These traces are evaluated through a cycle-accurate BookSim 2.0 interconnection network simulation to compare three distinct control paradigms: a reactive hardware controller, a queue-theoretic PID controller, and a model-predictive performance-targeted controller.
+
+Our experimental results show that TODO. This work provides a scalable path for managing NoC power without compromising the responsiveness of critical data center services.
+\end{abstract}
+
+\begin{IEEEkeywords}Warehouse-scale computing, power capping, network-on-chip, DVFS, tail latency, quality of service\end{IEEEkeywords}
+
+\section{Introduction}
+Warehouse-scale computers (WSCs) increasingly operate under \emph{site-level} power caps imposed by electrical provisioning and cooling limits. When aggregate demand approaches these limits, operators enforce caps by throttling lower-priority work so that user-facing services continue to meet strict tail-latency service-level objectives (SLOs) \cite{li_capmaestro_hpca19,li_thunderbolt_osdi20,bhattacharya_speed_stability_igcc12}. At the processor level, the same constraints appear as tight power/thermal envelopes that motivate fine-grained power management inside the chip. As core counts increase, on-chip data movement and interconnect activity become a major contributor to system power and performance \cite{adhinarayanan_interconnect_power_iiswc16}.
+
+One straightforward way to enforce a chip power cap is to throttle components uniformly. In the context of NoCs, \emph{uniform throttling} means reducing the frequency (and voltage) of all routers by the same factor to meet a power limit. While effective at capping power, this approach can needlessly degrade performance – especially for latency-critical traffic - because it slows down every network packet uniformly. In many applications, on-chip traffic is heterogeneous: certain control messages require low latency, whereas batch or bulk data transfers can better tolerate delays. Treating all network traffic the same under a power cap fails to account for these differing requirements. As a result, latency-sensitive transactions can suffer unnecssary slowdowns, potentially violating  service-level objectives (SLOs), even if other parts of the network have slack.
+
+We can intelligently throttle less critical traffic while preserving performance for critical flows, via Dynamic Voltage and Frequency Scaling (DVFS) on the NoC. DVFS allows modulating the supply voltage and clock frequency of router hardware, trading off performance for power savings in a controllable way ~\cite{hesse_coherence_dvfs}. By lowering frequency/voltage on parts of the NoC, dynamic power consumption can be reduced (roughly quadratically with voltage). Our approach is to leverage fine-grained DVFS domains in the NoC to balance network latency and saving enough power to meet the cap. We adjust the frequency of different region domains or individual routers, independently, based on their workload and traffic class. For example, routers primarily handling best-effort batch traffic can be throttled more when needed, freeing power headroom to keep the critical control traffic flowing with low latency.
+
+We explore the question of how a priority-aware NoC DVFS policy can keep control-class packets within their SLO while meeting the power budget, using a trace-driven, cycle-accurate methodology: a 64-core Sniper configuration generates class-tagged NoC packet traces, and BookSim 2.0 simulates a mesh/flatfly NoC with multi-domain DVFS actuation \cite{carlson_sniper_sc11,jiang_booksim_ispass13}. We compare a uniform-throttling baseline against three families of controllers: (i) a low-cost reactive hardware-style policy, (ii) a queue-theoretic feedback controller, and (iii) an optimization performance-targeted controller. We study how these control policies affect the latency and stability of network traffic across different topologies, packet injection rates, and power caps.
+
+\section{Problem Setting}
+
+\subsection{Control vs.\ batch traffic and SLO definition}
+We model two packet classes. \emph{Control-class} packets (class 0 in our traces) represent latency-sensitive messages whose delay can directly stall cores or elongate critical paths (e.g., coherence commands/acks, synchronization). \emph{Batch-class} packets (class 1) represent throughput-oriented transfers (e.g., bulk data movement or cache-line payload responses) that can tolerate additional latency. This two-class abstraction matches WSC power-management practice, where batch work is typically slowed first during power emergencies \cite{li_thunderbolt_osdi20}. Since absolute cycle targets vary by microarchitecture, we define the control SLO \emph{relative to a practical baseline}: do no worse than uniform NoC throttling at the same power cap. A priority-aware policy is successful if it stays power-safe while reducing control-class \texttt{P99} versus uniform DVFS, accepting some batch performance loss if needed.
+
+\subsection{Talk about Flit Reordering problem}
+TODO: Give some context about the problem and talk about the FIFOs we added and why it works, and how we guarantee it wont break.
+
+\section{Related Work}
+\subsection{Priority-aware power capping in WSCs}
+WSC power capping must account for workload priority to protect user-facing tail latency. CapMaestro proposes a scalable, closed-loop, priority-aware control architecture that shifts power budget from low-priority to high-priority work across the power distribution hierarchy \cite{li_capmaestro_hpca19}. Thunderbolt targets cluster-scale power caps by throttling batch tasks ``just enough'' while preserving serving QoS, enabling safe power oversubscription \cite{li_thunderbolt_osdi20}. At the single-node level, Rubik demonstrates that fast analytical models can guide power allocation to protect latency-critical work under a cap \cite{kasture_rubik_micro15}. Bhattacharya \emph{et al.} highlight that data center power demand can change faster than existing controllers can react, and that instability under power capping can cause dramatic latency degradation \cite{bhattacharya_speed_stability_igcc12}. Rubik demonstrates that fast, model-based power control can preserve tail latency for colocated latency-critical services while improving efficiency \cite{kasture_rubik_micro15}.
+
+\subsection{NoC DVFS and power budgeting}
+NoC DVFS has been studied extensively, often using utilization or buffer occupancy driven reactive policies.Early closed-loop formulations for NoC power management treat DVFS as a control problem with estimation and feedback \cite{simunic_power_noc_tvlsi04}. Hesse \emph{et al.} argue that purely reactive DVFS is limited and improve prediction by leveraging coherence protocol information to anticipate NoC demand \cite{hesse_coherence_dvfs}. At the budgeting level, PEPON proposes hierarchical allocation of a chip-wide power budget to NoC routers to improve performance under a cap \cite{sharifi_pepon_pact12}. Optimization and control-inspired approaches for multi-VFI systems also exist \cite{bogdan_optimal_control_todaes12}. Our work differs in focus: we study priority-aware NoC DVFS specifically through the lens of WSC-style control-vs-batch QoS under a hard power cap, with tail-latency as the primary metric.
+
+\subsection{NoC QoS and traffic differentiation}
+QoS mechanisms such as priority arbitration, virtual-channel partitioning, and bandwidth reservation are also widely used to isolate latency-sensitive traffic. Commercial on-chip fabrics may expose multiple traffic classes to reduce queuing for critical messages \cite{amd_versal_qos}. Our approach is complementary: QoS scheduling reduces contention \emph{given a fixed service rate}, whereas DVFS changes the service rate itself. Under a power cap, priority-aware DVFS can be viewed as redistributing limited service capacity to better satisfy control-traffic tail-latency constraints.
+
+\section{Understanding Power Caps in WSCs}
+Datacenter operators provision power delivery and cooling for a fixed envelope, then enforce \emph{site-level} caps to avoid overload, reduce operating cost, and enable safe oversubscription. Real power demand can change rapidly, and naive throttling can destabilize latency-sensitive services \cite{bhattacharya_speed_stability_igcc12}. As a result, modern WSC power managers explicitly differentiate priorities, throttling batch work more aggressively than serving traffic during cap events \cite{li_capmaestro_hpca19,li_thunderbolt_osdi20}.
+
+At the node level, site-level constraints translate into per-server or per-socket budgets. Hardware mechanisms and software control loops allocate these budgets across subsystems (cores, caches, memory, and fabrics). In this paper we focus on the NoC share of the node budget and treat it as a hard cap over the policy decision epoch. All policies are evaluated under the \emph{same} NoC power cap to isolate the impact of allocation decisions on control-class tail latency.
+
+\section{NoC DVFS Background}
+Dynamic voltage and frequency scaling (DVFS) trades performance for power by adjusting supply voltage $V$ and clock frequency $f$. Dynamic power scales approximately as $P \propto V^{2}f$, so reducing both can substantially cut power at the cost of lower service rate. Applied to a NoC, DVFS controls each router's \emph{service capacity}: lowering $f$ increases per-hop serialization latency and can increase queueing delay when offered load approaches service capacity.
+
+\subsection{Actuation granularity}
+DVFS can be applied globally (one domain for the entire NoC) or in multiple voltage-frequency islands that scale independently. Finer granularity enables targeted throttling: domains that primarily carry batch traffic can be slowed while preserving frequency along control-critical routes. However, finer granularity also increases hardware cost and can complicate control. Due to a limitation of time, we focus our evaluation of router-level domain control to understand and quantify the returns of our control policies.
+
+\subsection{Transition latency and control stability}
+DVFS transitions are not instantaneous: voltage changes require regulator settling, and frequent toggling can waste time and harm latency. At WSC scale, demand variability and control-loop stability are central challenges for power capping \cite{bhattacharya_speed_stability_igcc12}; similar issues appear on-chip when DVFS is driven by bursty injection and localized congestion. We choose an epoch length of TODO because TODO.
+
+\subsection{DVFS as a NoC service control knob}
+From a queuing perspective, each DVFS decision changes the service rate $\mu$ of the router pipeline. When the offered load $\lambda$ is low, reducing $f$ primarily increases serialization latency. When $\lambda$ approaches $\mu$, queuing delay dominates and tail latency can rise sharply. Priority-aware DVFS aims to keep $\mu$ high where it most benefits control-class \texttt{P99} (hot spots and critical routes), while reducing $\mu$ in regions that primarily affect batch throughput.
+
+\section{Infrastructure}
+\subsection{Overview}
+The simulation framework framework follows a multi-stage process that separates DVFS policy development with trace generation. This separation allows us to test to tweak and experiment with policies quickly without having to re-run the entire benchmark every time. First, we feed control and batch class benchmarks into an x86 simulator, SNIPER to get network traces. Then, we feed those network traces as well as a custom DVFS policy into a fast network simulator, BookSim 2.0 that captures metrics.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\linewidth]{infra_flow.png}
+    \caption{Intrastructure Setup Flowgraph}
+    \label{fig:your_label}
+\end{figure}
+
+\subsection{Benchmarks}
+To evaluate how power management affects different types of data center traffic, we needed to simulate two specific types of workloads: Control-class and Batch-class. In modern data centers, these different tasks often run on the same hardware. However, they have very different goals. Control-class tasks, like web search or voice recognition, need to be extremely low latency. Batch-class tasks, like compressing files or processing images, need high throughput but the short-term time requirement to finish execution is not as important. By testing both together, we can see if aggressive power saving for the batch tasks affects latency-sensitive control jobs.
+
+For our benchmarks, we chose TailBench++ for the control class and PARSEC for the batch class. From TailBench++, we used Xapian (search) and Sphinx (speech) because they act like real internet services that get bursts of user requests. From PARSEC, we used VIPS and Dedup because they move a lot of data around, which puts a heavy load on the Network-on-Chip (NoC). This setup lets us test if our power-saving policies can differentiate between "urgent" traffic and "background" traffic.
+
+Initially, we planned to use a suite called DCPerf, a set of benchmarks from Meta that closely mimics datacenter workloads. While DCPerf is very realistic, it is designed to run on a "full-system" simulator, which simulated benchmarks too slow for our schedule. Instead, we switched to the SNIPER multi-core simulator. SNIPER allowed us to skip the slow parts of full-system simulation and generate network traces much faster.
+
+\subsection{Trace Generation}
+In order to simulate a NoC, we need to first generate traces from the benchmarks. We initially explored the gem5 simulator to perform full-system cycle-accurate simulations; however, due to significant time constraints and the immense computational overhead required for many-core configurations, we transitioned to the SNIPER multi-core simulator for the trace generation phase.
+
+SNIPER is a a parallel multi-core simulator with the detail of cycle-level simulation that uses interval simulation. It groups instructions into intervals between major events like branch mispredictions or cache misses, which greatly saves simulation time. In comparison tests, Sniper has been shown to be the fastest and most accurate among contemporary x86 simulators like gem5 and PTLsim, though it is slightly less flexible for modeling entirely new hardware features. ~\cite{carlson_sniper_sc11}
+This limitation is not a concern for our study. Since our primary goal is to generate benchmark network traces, SNIPER’s high speed and validated accuracy on x86 architectures make it the most effective tool for our infrastructure.
+
+\subsection{Network Simulator}
+The second half of our infrastructure uses BookSim 2.0, a cycle-accurate simulator specifically designed for the Network-on-Chip (NoC). Because we use pre-generated traces from SNIPER, we can run the same traffic patterns through BookSim over and over again while changing only the policies that modify power and frequency settings. This allows us to see precisely how a site-level power cap affects the latency of important data packets.
+
+TODO: DVFS Modeling in Booksim 
+TODO: Class and Traffic Generation
+
+\section{Data}
+\subsection{Trace Format}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[scale=0.7]{traces.png}
+    \caption{Example Trace Snippet}
+    \label{fig:your_label}
+\end{figure}
+
+This is an example SNIPER-generated network trace that includes both batch-class and control-class workloads in a line network. This interleaving provides a pseudo-realistic representation of the system operating with both workload types simultaneously. The formatting of these traces is shown below.
+\newline
+
+
+\resizebox{200pt}{!}{
+\begin{tabular}{|c|c|}
+\hline
+index 0 & cycle \# \\ \hline
+index 1 & sender ID \\ \hline
+index 2 & receiver ID \\ \hline
+index 3 & packet size \\ \hline
+index 4 & latency \\ \hline
+index 5 & control (0) / batch (1) \\ \hline
+\end{tabular}
+}
+
+\subsection{Metrics}
+TODO: put what metrics are collected here
+
+\section{DVFS Control Policies: TODO}
+\subsection{Reactive Hardware Baseline}
+Our baseline captures a class of low-cost, threshold-driven DVFS governors suitable for pure hardware implementation.
+A representative example is \emph{FreqThrottle}~\cite{mishra_freqtuning_micro09}: routers operate at a reduced base frequency and temporarily accelerate when local congestion is detected.
+More generally, the baseline uses simple rules (e.g., ``boost'' when utilization or buffer occupancy exceeds a high threshold; ``slow'' when it falls below a low threshold) with hysteresis to avoid rapid toggling.
+Such schemes have minimal overhead (comparators and small state), but can be myopic and leave efficiency on the table under complex traffic patterns.
+
+\subsection{Queue-Theoretic Feedback Control}
+The queue-theoretic policy regulates a chosen queue occupancy metric around a target setpoint.
+Intuitively, growing queues indicate that arrivals exceed service; DVFS increases frequency to raise service rate and drain backlog.
+Conversely, persistently empty queues indicate excess service capacity; DVFS lowers frequency to save power.
+This approach aligns with queueing relationships (e.g., Little's Law) and can yield stable, near-optimal power--delay operating points when properly tuned~\cite{casu_jpdc2017,juang_islped2005}.
+
+In our implementation, each epoch computes the average queue occupancy over the previous interval and updates the frequency using a feedback rule (e.g., proportional or PI control).
+Key knobs include the queue target and controller gains/step sizes.
+We explicitly study how the epoch length interacts with control gains: short epochs react quickly but may overshoot; longer epochs filter noise but may respond sluggishly.
+
+\subsection{Optimal-Control-Inspired Policy}
+The optimal-control policy approximates a power minimization subject to performance constraints.
+Rather than regulating a single signal, it uses a system-level objective, for example:
+minimize energy while meeting a delay target (delay-constrained DVFS)~\cite{casu_date2015},
+or solve a per-epoch optimization using a simplified performance model.
+Practically, this policy can be implemented as:
+(i) a precomputed lookup table mapping observed state to DVFS actions, or
+(ii) a receding-horizon (model-predictive) controller that selects the next frequency by optimizing a short-horizon cost.
+Because it requires either offline model fitting or online optimization, we treat it as a software-assisted or runtime-managed ``upper bound'' relative to purely hardware rules.
+
+\section*{Acknowledgment}
+We would like to express our sincere gratitude to Professor Sagar Karandikar for his guidance and support throughout this project. His expertise in the course CS 294-252: Architectures and Systems for Warehouse-Scale Computers was instrumental in shaping the direction of this research. We also want to thank my classmates for their valuable suggestions and feedback during our in-class discussions, which helped refine our approach to priority-aware power management. Finally, we are grateful for the resources provided by the University of California, Berkeley, which made this work possible.
+
+\begin{thebibliography}{00}
+
+\bibitem{li_capmaestro_hpca19}
+Y.~Li, C.~R.~Lefurgy, K.~Rajamani, M.~S.~Allen-Ware, G.~J.~Silva, D.~D.~Heimsoth, S.~Ghose, and O.~Mutlu,
+``A Scalable Priority-Aware Approach to Managing Data Center Server Power,''
+in \emph{Proc. IEEE Int'l Symp. High-Performance Computer Architecture (HPCA)}, 2019.
+
+\bibitem{li_thunderbolt_osdi20}
+S.~Li, X.~Wang, X.~Zhang, V.~Kontorinis, S.~Kodakara, D.~Lo, and P.~Ranganathan,
+``Thunderbolt: Throughput-Optimized, Quality-of-Service-Aware Power Capping at Scale,''
+in \emph{Proc. USENIX Symp. Operating Systems Design and Implementation (OSDI)}, 2020.
+
+\bibitem{bhattacharya_speed_stability_igcc12}
+A.~Bhattacharya, J.~M.~Culler, R.~Kansal, S.~Govindan, and S.~Sankar,
+``The Need for Speed and Stability in Data Center Power Capping,''
+in \emph{Proc. Int'l Green Computing Conf. (IGCC)}, 2012.
+
+\bibitem{kasture_rubik_micro15}
+H.~Kasture, D.~Bartolini, N.~Beckmann, and D.~Sanchez,
+``Rubik: Fast Analytical Power Management for Latency-Critical Systems,''
+in \emph{Proc. IEEE/ACM Int'l Symp. Microarchitecture (MICRO)}, 2015.
+
+\bibitem{adhinarayanan_interconnect_power_iiswc16}
+V.~Adhinarayanan, I.~Paul, J.~L.~Greathouse, W.~Huang, A.~Pattnaik, and W.-c.~Feng,
+``Measuring and Modeling On-Chip Interconnect Power on Real Hardware,''
+in \emph{Proc. IEEE Int'l Symp. Workload Characterization (IISWC)}, 2016.
+
+\bibitem{carlson_sniper_sc11}
+T.~E.~Carlson, W.~Heirman, and L.~Eeckhout,
+``Sniper: Exploring the Level of Abstraction for Scalable and Accurate Parallel Multi-core Simulations,''
+in \emph{Proc. Int'l Conf. for High Performance Computing, Networking, Storage and Analysis (SC)}, 2011.
+
+\bibitem{jiang_booksim_ispass13}
+N.~Jiang, D.~U.~Becker, G.~Michelogiannakis, J.~Balfour, B.~Towles, D.~E.~Shaw, J.~Kim, and W.~J.~Dally,
+``A Detailed and Flexible Cycle-Accurate Network-on-Chip Simulator,''
+in \emph{Proc. IEEE Int'l Symp. Performance Analysis of Systems and Software (ISPASS)}, 2013.
+
+\bibitem{simunic_power_noc_tvlsi04}
+T.~Simunic, S.~P.~Boyd, and P.~Glynn,
+``Managing Power Consumption in Networks on Chips,''
+\emph{IEEE Trans. Very Large Scale Integration (VLSI) Systems}, vol.~12, no.~1, pp.~96--107, 2004.
+
+\bibitem{hesse_coherence_dvfs}
+R.~Hesse and N.~E.~Jerger,
+``Improving DVFS in NoCs with Coherence Prediction,''
+in \emph{Proc. IEEE Int'l Symp. Networks-on-Chip (NOCS)}, 2015.
+
+\bibitem{sharifi_pepon_pact12}
+A.~Sharifi, A.~K.~Mishra, S.~Srikantaiah, M.~T.~Kandemir, and C.~R.~Das,
+``PEPON: Performance-Aware Hierarchical Power Budgeting for NoC based Multicores,''
+in \emph{Proc. Int'l Conf. Parallel Architectures and Compilation Techniques (PACT)}, 2012.
+
+\bibitem{bogdan_optimal_control_todaes12}
+P.~Bogdan and R.~Marculescu,
+``Towards a Science of Cyber-Physical Systems Design: A Time and Energy Perspective,''
+\emph{ACM Trans. Design Automation of Electronic Systems}, vol.~17, no.~3, 2012.
+
+\bibitem{amd_versal_qos}
+AMD,
+``NoC and QoS Requirements (UG994),'' documentation, 2025.
+
+\bibitem{mishra_freqtuning_micro09}
+A.~K.~Mishra, R.~Das, S.~Eachempati, R.~R.~Iyer, V.~Narayanan, and C.~R.~Das,
+``A Case for Dynamic Frequency Tuning in On-Chip Networks,''
+in \emph{Proc. IEEE/ACM Int'l Symp. Microarchitecture (MICRO)}, 2009.
+
+\bibitem{casu_date2015}
+M.~R.~Casu and P.~Giaccone,
+``Rate-based vs Delay-based Control for DVFS in NoC,''
+in \emph{Proc. Design, Automation \& Test in Europe (DATE)}, 2015.
+
+\bibitem{casu_jpdc2017}
+M.~R.~Casu and P.~Giaccone,
+``Power-performance assessment of different DVFS control policies in NoCs,''
+\emph{Journal of Parallel and Distributed Computing}, 2017.
+
+\bibitem{juang_islped2005}
+P.~Juang, K.~Skadron, M.~Martonosi, and D.~Clark,
+``Coordinated, Distributed, Formal Energy Management of Chip Multiprocessors,''
+in \emph{Proc. Int'l Symp. Low Power Electronics and Design (ISLPED)}, 2005.
+
+\end{thebibliography}
+\vspace{12pt}
+\end{document}
