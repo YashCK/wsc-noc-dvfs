@@ -146,6 +146,24 @@ def plot_latency_vs_power_cap_by_injection(df, topology, class_type='control'):
     
     colors_inj = plt.cm.viridis(np.linspace(0, 0.8, len(injection_rates)))
     
+    # First pass: collect all y values to determine global min/max
+    all_y_values = []
+    for policy in ['uniform', 'hw_reactive', 'queue_pid', 'perf_target']:
+        policy_df = topo_df[topo_df['policy'] == policy]
+        for inj_rate in injection_rates:
+            inj_df = policy_df[policy_df['injection_rate'] == inj_rate]
+            inj_df = inj_df.dropna(subset=[metric_col])
+            if not inj_df.empty:
+                all_y_values.extend(inj_df[metric_col].tolist())
+    
+    # Compute global ylim with some padding
+    if all_y_values:
+        global_ymin = min(all_y_values) * 0.8
+        global_ymax = max(all_y_values) * 1.2
+    else:
+        global_ymin, global_ymax = None, None
+    
+    # Second pass: plot with consistent y-axis scale
     for idx, policy in enumerate(['uniform', 'hw_reactive', 'queue_pid', 'perf_target']):
         ax = axes[idx]
         policy_df = topo_df[topo_df['policy'] == policy]
@@ -166,6 +184,10 @@ def plot_latency_vs_power_cap_by_injection(df, topology, class_type='control'):
         ax.legend(loc='best', fontsize=9)
         ax.grid(True, alpha=0.3)
         ax.set_yscale('log')
+        
+        # Apply consistent y-axis limits
+        if global_ymin is not None and global_ymax is not None:
+            ax.set_ylim(global_ymin, global_ymax)
     
     plt.suptitle(f'{class_type.capitalize()} Class P99 Latency vs Power Cap ({topology.capitalize()})', 
                  fontsize=14, fontweight='bold')
@@ -355,6 +377,22 @@ def plot_comparison_all_policies(df, topology):
     
     topo_df = df[df['topology'] == topology]
     
+    # Pre-compute global limits for Control P99 and Batch P99
+    control_p99_vals = topo_df['control_p99'].dropna()
+    batch_p99_vals = topo_df['batch_p99'].dropna()
+    
+    if not control_p99_vals.empty:
+        control_ymin = control_p99_vals.min() * 0.8
+        control_ymax = control_p99_vals.max() * 1.2
+    else:
+        control_ymin, control_ymax = None, None
+    
+    if not batch_p99_vals.empty:
+        batch_ymin = batch_p99_vals.min() * 0.8
+        batch_ymax = batch_p99_vals.max() * 1.2
+    else:
+        batch_ymin, batch_ymax = None, None
+    
     # Plot 1: Control P99 vs Power Cap
     ax = axes[0, 0]
     for policy in ['uniform', 'hw_reactive', 'queue_pid', 'perf_target']:
@@ -371,6 +409,8 @@ def plot_comparison_all_policies(df, topology):
     ax.legend(fontsize=8)
     ax.grid(True, alpha=0.3)
     ax.set_yscale('log')
+    if control_ymin is not None:
+        ax.set_ylim(control_ymin, control_ymax)
     
     # Plot 2: Batch P99 vs Power Cap
     ax = axes[0, 1]
@@ -388,6 +428,8 @@ def plot_comparison_all_policies(df, topology):
     ax.legend(fontsize=8)
     ax.grid(True, alpha=0.3)
     ax.set_yscale('log')
+    if batch_ymin is not None:
+        ax.set_ylim(batch_ymin, batch_ymax)
     
     # Plot 3: Control Throughput vs Power Cap
     ax = axes[0, 2]
@@ -421,6 +463,8 @@ def plot_comparison_all_policies(df, topology):
     ax.legend(fontsize=8)
     ax.grid(True, alpha=0.3)
     ax.set_yscale('log')
+    if control_ymin is not None:
+        ax.set_ylim(control_ymin, control_ymax)
     
     # Plot 5: Batch P99 vs Injection Rate
     ax = axes[1, 1]
@@ -438,6 +482,8 @@ def plot_comparison_all_policies(df, topology):
     ax.legend(fontsize=8)
     ax.grid(True, alpha=0.3)
     ax.set_yscale('log')
+    if batch_ymin is not None:
+        ax.set_ylim(batch_ymin, batch_ymax)
     
     # Plot 6: Average Frequency vs Power Cap (throttling indicator)
     ax = axes[1, 2]
