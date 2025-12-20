@@ -34,7 +34,7 @@ As warehouse-scale systems increasingly rely on power capping to manage energy c
 
 This paper presents a Priority-Aware NoC DVFS framework designed to enforce power caps while selectively preserving the performance of critical traffic. We utilize the SNIPER multi-core simulator to generate network traces from both batch and control class benchmarks from PARSEC and TailBench++ respectively. These traces are evaluated through a cycle-accurate BookSim 2.0 interconnection network simulation to compare three distinct control paradigms: a reactive hardware controller, a queue-theoretic PID controller, and a model-predictive performance-targeted controller.
 
-Our experimental results show that TODO. This work provides a scalable path for managing NoC power without compromising the responsiveness of critical data center services.
+Our experimental results show that class-aware DVFS reduces control-class \texttt{P99} latency under power caps relative to uniform throttling while compliaing to the power-budget. This work provides a path for managing NoC power without compromising the responsiveness of critical data center services.
 \end{abstract}
 
 \begin{IEEEkeywords}Warehouse-scale computing, power capping, network-on-chip, DVFS, tail latency, quality of service\end{IEEEkeywords}
@@ -42,7 +42,7 @@ Our experimental results show that TODO. This work provides a scalable path for 
 \section{Introduction}
 Warehouse-scale computers (WSCs) increasingly operate under \emph{site-level} power caps imposed by electrical provisioning and cooling limits. When aggregate demand approaches these limits, operators enforce caps by throttling lower-priority work so that user-facing services continue to meet strict tail-latency service-level objectives (SLOs) \cite{li_capmaestro_hpca19,li_thunderbolt_osdi20,bhattacharya_speed_stability_igcc12}. At the processor level, the same constraints appear as tight power/thermal envelopes that motivate fine-grained power management inside the chip. As core counts increase, on-chip data movement and interconnect activity become a major contributor to system power and performance \cite{adhinarayanan_interconnect_power_iiswc16}.
 
-One straightforward way to enforce a chip power cap is to throttle components uniformly. In the context of NoCs, \emph{uniform throttling} means reducing the frequency (and voltage) of all routers by the same factor to meet a power limit. While effective at capping power, this approach can needlessly degrade performance – especially for latency-critical traffic - because it slows down every network packet uniformly. In many applications, on-chip traffic is heterogeneous: certain control messages require low latency, whereas batch or bulk data transfers can better tolerate delays. Treating all network traffic the same under a power cap fails to account for these differing requirements. As a result, latency-sensitive transactions can suffer unnecssary slowdowns, potentially violating  service-level objectives (SLOs), even if other parts of the network have slack.
+One straightforward way to enforce a chip power cap is to throttle components uniformly. In the context of NoCs, \emph{uniform throttling} means reducing the frequency (and voltage) of all routers by the same factor to meet a power limit. While effective at capping power, this approach can needlessly degrade performance – especially for latency-critical traffic - because it slows down every network packet uniformly. In many applications, on-chip traffic is heterogeneous: certain control messages require low latency, whereas batch or bulk data transfers can better tolerate delays. Treating all network traffic the same under a power cap fails to account for these differing requirements. As a result, latency-sensitive transactions can suffer unnecessary slowdowns, potentially violating  service-level objectives (SLOs), even if other parts of the network have slack.
 
 We can intelligently throttle less critical traffic while preserving performance for critical flows, via Dynamic Voltage and Frequency Scaling (DVFS) on the NoC. DVFS allows modulating the supply voltage and clock frequency of router hardware, trading off performance for power savings in a controllable way ~\cite{hesse_coherence_dvfs}. By lowering frequency/voltage on parts of the NoC, dynamic power consumption can be reduced (roughly quadratically with voltage). Our approach is to leverage fine-grained DVFS domains in the NoC to balance network latency and saving enough power to meet the cap. We adjust the frequency of different region domains or individual routers, independently, based on their workload and traffic class. For example, routers primarily handling best-effort batch traffic can be throttled more when needed, freeing power headroom to keep the critical control traffic flowing with low latency.
 
@@ -124,7 +124,7 @@ The simulation framework framework follows a multi-stage process that separates 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=\linewidth]{infra_flow.png}
-    \caption{Intrastructure Setup Flowgraph}
+    \caption{Infrastructure Setup Flowgraph}
     \label{fig:your_label}
 \end{figure}
 
@@ -156,6 +156,29 @@ epoch boundary, a policy computes the next frequency scale(s), clamped by \textt
 \texttt{dvfs\_max\_scale}, and applied to the configured \texttt{router\_domains}. This mirrors a
 hardware/software DVFS governor where sensors are sampled periodically and new operating points are
 programmed with bounded actuation granularity.
+
+\subsection{ORION 3.0 power model integration}
+We integrate the ORION 3.0 power model directly into BookSim's IQRouter implementation. When
+\texttt{use\_orion=1}, each router initializes the ORION model with architectural parameters from the
+configuration (e.g., \texttt{Vdd}, \texttt{Orion\_Freq}, flit width, VC count, buffer sizes, arbitration
+models, crossbar model, and wire length). The router attaches buffer and switch monitors to track
+ingress/egress activity and initializes an ORION link bus model to estimate link energy. This gives us
+an activity-driven power estimate that reflects actual routing, buffering, and crossbar usage under the
+current DVFS setting.
+
+At each DVFS epoch, the traffic manager queries each router for its ORION-based power using the
+current \texttt{freq\_scale}. Internally, ORION computes average energy per cycle from the observed
+buffer writes/reads, converts that to power using the scaled frequency, and adds a simple link power
+term based on output flit activity. These per-router values are summed into \texttt{total\_power} and
+stored in \texttt{PowerTelemetry}, along with headroom under the cap. The monitors are reset at the end
+of each epoch so that the next update reflects only the new interval. This ORION-derived telemetry is
+what drives our power-capped DVFS policies and is logged in the energy/epoch CSVs for analysis.
+
+When ORION is disabled, we fall back to a lightweight analytic power model that uses
+\texttt{power\_dyn\_base}, \texttt{power\_leak\_base}, and the configured \texttt{dvfs\_freqs} /
+\texttt{dvfs\_voltages} (or per-domain lists) to compute dynamic power proportional to $V^2 f$ and
+leakage proportional to $V$. This fallback is useful for fast design-space sweeps, while ORION provides
+the more detailed per-router power accounting used in our main experiments.
 
 \subsection{Class-aware scheduling and the DVFS control loop}
 Our simulator makes policies class-aware end-to-end. Each injected packet carries a \emph{class ID}
@@ -306,14 +329,212 @@ with class-aware telemetry (control P99) and, optionally, priority boosting at a
 to preserve control-class tail latency under site-level caps where uniform DVFS would degrade all traffic
 equally.
 
-\section*{Acknowledgment}
-We would like to express our sincere gratitude to Professor Sagar Karandikar for his guidance and support throughout this project. His expertise in the course CS 294-252: Architectures and Systems for Warehouse-Scale Computers was instrumental in shaping the direction of this research. We also want to thank my classmates for their valuable suggestions and feedback during our in-class discussions, which helped refine our approach to priority-aware power management. Finally, we are grateful for the resources provided by the University of California, Berkeley, which made this work possible.
-
 \section*{Evaluation}
+\label{sec:evaluation}
 
-\section*{Conclusion}
+In this section, we evaluate whether priority-aware NoC DVFS controllers can (i) satisfy a hard NoC power budget derived from a site-level cap, (ii) keep \emph{control-class} tail latency (P99) within a tight SLO, and (iii) outperform the conventional baseline of \emph{uniform} throttling under the same budget. I focus on two families of metrics: \textbf{(a) actuation behavior} (the frequency scales selected under each power cap) and \textbf{(b) user-visible performance} (control-class P99 latency).
+
+\subsection{Experimental Setup and Metrics}
+\label{sec:eval-setup}
+
+\paragraph{Topology, workload, and classes}
+All results in this section use the \textbf{flatfly} topology. Traffic is split into two classes: \textbf{control (class 0)} and \textbf{batch (class 1)}. Control traffic represents latency-critical RPCs and coordination; batch represents throughput-oriented background work. The simulator tracks per-class latency distributions and reports \textbf{P99 control latency} as the primary SLO metric.
+
+\paragraph{Power caps and DVFS actuation}
+Each experiment is run under a \textbf{hard NoC power cap} (x-axis in W). Controllers output a per-domain frequency scale $f \in (0,1]$; the plots report the \textbf{average frequency scale} across time and domains unless otherwise noted. All policies are constrained to remain within the specified budget.
+
+\paragraph{Policies compared}
+\begin{itemize}
+  \item \textbf{Uniform}: A baseline that applies the same frequency scale to all routers/domains to meet the cap.
+  \item \textbf{HW Reactive}: A threshold-based reactive controller driven by queue occupancy.
+  \item \textbf{Queue PID}: A feedback controller that uses PID control on queue occupancy relative to a target.
+  \item \textbf{Perf Target}: A performance/SLO-oriented controller that explicitly biases actuation to meet control-class tail latency.
+\end{itemize}
+
+\paragraph{Load levels}
+To expose behavior across congestion regimes, I sweep multiple offered loads (legend “inj”), which correspond to increasing injection intensity. Conceptually, these runs move the network from lightly loaded (delay dominated by base hop count) to heavily loaded (delay dominated by queuing and contention).
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{flatfly_dvfs_frequency_vs_power_cap.png}
+  \caption{Average DVFS frequency scale selected by each policy vs. the NoC power cap (flatfly).}
+  \label{fig:flatfly_freq_vs_cap}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{flatfly_control_p99_vs_power_by_inj.png}
+  \caption{Control-class P99 latency vs. power cap for multiple injection levels (flatfly). Each panel corresponds to one DVFS policy.}
+  \label{fig:flatfly_p99_byinj}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{flatfly_control_p99_vs_power.png}
+  \caption{Aggregate view: control-class P99 latency vs. power cap (flatfly). Lower is better.}
+  \label{fig:flatfly_p99_vs_cap}
+\end{figure}
+
+\subsection{Actuation Behavior: Frequency Scale vs. Power Cap}
+\label{sec:eval-freq}
+
+Figure~\ref{fig:flatfly_freq_vs_cap} shows the \emph{average} frequency scale each policy selects as the power cap relaxes.
+
+\paragraph{Uniform actuation behavior}
+At the tightest caps (0.3--0.4W), Uniform drops to a very low average frequency (around 0.5). This is expected as the uniform policy has only one degree of freedom (a single global scale), so meeting the cap forces it to slow \emph{everywhere}, including routers that are not on the critical congestion path. As the cap relaxes to 0.5--0.7W, Uniform jumps upward quickly (to $\sim$0.8--0.9), then approaches 1.0 by 0.8--1.0W. 
+
+\paragraph{HW Reactive spends more frequency early to avoid instability}
+HW Reactive stays notably higher than Uniform at the tightest caps (roughly mid-0.6s vs. 0.5). The key mechanism is that occupancy thresholds effectively act as an early-warning signal: when queues start to build, HW Reactive boosts frequency before the network enters a runaway queuing regime. It effectively uses some of the limited power budget to prevent the system from crossing the high-utilization cliff where tail latency explodes.
+
+\paragraph{Queue PID can become conservative at high caps}
+Queue PID rises gradually with cap up to about 0.7W, but then \emph{drops} its average frequency at 0.8--1.0W. This is an issue due to over-trusting its queue occupancy signal. When average occupancy falls below the target (which is common once congestion eases), the PID loop drives the actuation downward to ``save power,'' even when the cap would permit more headroom. We can see that \emph{average occupancy is not a tail-latency guarantee}. Under bursty control traffic, it is possible to have low average occupancy but still experience transient queue spikes that dominate P99. That mismatch is also what shows up in the latency plots later.
+
+\paragraph{Perf Target opts for saving power after achieving target tail latency}
+Perf Target stays relatively high at low caps (low/mid-0.7s) and then flattens around $\sim$0.9 beyond 0.7W. This pattern is consistent with an SLO-oriented goal: once the controller has achieved the desired tail-latency region, it stops “chasing” maximum frequency and instead maintains a stable operating point with margin for bursts. This policy is the most \emph{stable performance} under the cap.
+
+\subsection{Primary Result: Control-Class P99 Latency vs. Power Cap}
+\label{sec:eval-p99}
+
+Figure~\ref{fig:flatfly_p99_vs_cap} summarizes control P99 latency as the cap increases.
+
+\paragraph{Uniform has poor tail latency under tight caps}
+Uniform throttling shows extremely high P99 at low caps and then a dramatic drop around 0.7W. 
+\begin{itemize}
+  \item Under tight caps, uniform scaling reduces service rate $\mu$ everywhere. Even if offered load $\lambda$ is unchanged, utilization $\rho=\lambda/\mu$ increases. As $\rho \to 1$, queues become very sensitive to bursts, and P99 can grow by multiples even when averages look stable.
+  \item Once the cap is relaxed enough to push $\rho$ away from 1 on the critical links/routers, queueing delay collapses rapidly, producing the sharp improvement around the knee.
+\end{itemize}
+We can see that the uniform throttling policy is a brittle strategy as it behaves reasonably only once the cap is high enough that it’s not truly constrained.
+
+\paragraph{HW Reactive improves over Uniform where it matters}
+The HW Reactive poilcy yields substantially lower P99 than Uniform at the most constrained caps. This happens because it prevents persistent queue buildup by boosting frequency in response to congestion signals. The policy is still not perfect—P99 remains elevated at very low caps—but compared to Uniform it avoids the worst-case runaway queuing that dominates tail latency.
+
+\paragraph{Queue PID shows an instability region at higher caps}
+Queue PID improves P99 as caps increase up to about 0.7W, but then \emph{gets worse} beyond that (its P99 rises at 0.8--1.0W). This aligns with the counterintuitive frequency drop in Figure~\ref{fig:flatfly_freq_vs_cap}.
+The most plausible explanation we have is that it is a control-theoretic mismatch:
+\begin{itemize}
+  \item The PID loop is stabilizing \emph{average occupancy} around a target.
+  \item When the system is lightly loaded, average occupancy naturally falls and the controller responds by reducing frequency.
+  \item That reduction removes burst headroom and increases the probability of transient queue spikes, which disproportionately affect P99.
+\end{itemize}
+So Queue PID can be “locally optimal” on its chosen signal (occupancy) while being globally suboptimal on the actual goal (tail latency). 
+
+\paragraph{Perf Target dominates P99 across caps}
+Perf Target achieves the lowest control-class P99 latency across nearly all caps. The implication is that explicit performance targeting is more robust than trying to infer tail behavior from occupancy alone. In particular, Perf Target seems to provide:
+\begin{itemize}
+  \item \textbf{Burst tolerance:} it retains enough frequency headroom to absorb short control bursts.
+  \item \textbf{Stability:} it avoids oscillations in actuation that would otherwise create periodic queuing spikes.
+  \item \textbf{Cap efficiency:} it does not need to run at full frequency to keep P99 low; it finds a stable mid/high point.
+\end{itemize}
+
+\subsection{Sensitivity to Load: P99 vs. Cap at Multiple Injection Levels}
+\label{sec:eval-byinj}
+
+Figure~\ref{fig:flatfly_p99_byinj} breaks the story down by injection level (offered load), which is essential because tail latency behavior is highly non-linear near saturation.
+
+\paragraph{Uniform throttling}
+In the Uniform panel:
+\begin{itemize}
+  \item At low injection (inj=0.2), P99 is comparatively modest and decreases smoothly with cap. This is expected: the network is not near saturation, so DVFS mainly adds a small service-rate penalty.
+  \item At medium injection (inj=0.4), P99 is enormous at 0.3--0.6W and then collapses around 0.7W. This indicates that inj=0.4 sits near the saturation boundary for the flatfly under uniform scaling; tight caps push it into the unstable regime.
+  \item At high injection (inj=0.6), the network remains stressed even at higher caps, producing elevated P99 despite more power headroom.
+\end{itemize}
+This is the clearest evidence that uniform DVFS is not graceful under pressure as it fails exactly when there is a high load + tight cap.
+
+\paragraph{HW Reactive policy}
+HW Reactive reduces P99 substantially at medium injection compared to Uniform, especially in the constrained regime. Instead of needing the cap to reach the knee before improving, it begins improving earlier (because it responds to congestion proactively).
+However, the curves still show a load-dependent region where P99 is high at low caps. If the cap is simply too low, there isn’t enough power budget to prevent queues from growing during sustained contention.
+
+\paragraph{Queue PID policy}
+Queue PID improves with cap up to about 0.7W for inj=0.4, but then P99 rises again at 0.8--1.0W. This again points to the limitation of controlling occupancy as a proxy for tail latency. Under bursty traffic, average occupancy can be low while P99 is dominated by rare spikes. A controller that reduces frequency in response to low average occupancy can unintentionally \emph{increase} spike amplitude and frequency.
+
+\paragraph{Performance Target policy}
+Perf Target is the most consistent across injection levels:
+\begin{itemize}
+  \item For inj=0.2, P99 stays low and largely insensitive to cap once beyond modest headroom.
+  \item For inj=0.4, it avoids the extreme blowups that Uniform experiences at tight caps and steadily improves with cap.
+\end{itemize}
+
+\subsection{Conclusion}
+\label{sec:eval-takeaways}
+
+These plots collectively support three conclusions.
+
+\paragraph{(1) Uniform throttling is a weak baseline under site-level caps}
+Uniform DVFS creates a global service-rate reduction that pushes the network into the high-utilization regime where P99 grows explosively. It performs acceptably only after the cap crosses a knee.
+
+\paragraph{(2) Priority-aware, localized control improves tail latency under tight budgets}
+HW Reactive demonstrates that even a simple, congestion-aware strategy can significantly reduce control P99 under the same cap by spending power where queues form, rather than penalizing the whole fabric.
+
+\paragraph{(3) The control signal matters: tail-latency targeting beats occupancy targeting}
+Queue PID illustrates that stabilizing occupancy does not necessarily stabilize P99. The Perf Target policy's superior results suggest that an explicit performance objective (control P99 or an SLO margin) is the right abstraction for WSC-style NoC DVFS under hard caps.
+
+\paragraph{Summary}
+Under site-level-derived NoC power caps, a policy that explicitly targets control-class tail latency achieves the best robustness across caps and loads, while uniform throttling is brittle and occupancy-only PID can misallocate headroom and regress P99 in lightly loaded regimes.
 
 \section*{Future Work}
+\label{sec:future-work}
+
+The results we currently have are promising, but they also lead to some next steps, both to strengthen the evidence and to push to more robust or realistic designs.
+
+\subsection{Richer Control Strategies}
+\label{sec:future_control}
+
+\paragraph{SLO-aware multi-objective control}
+Right now, the policies effectively optimize one primary objective (control P99) under a hard cap. In practice, WSCs operators care about multiple competing goals: control tail latency, batch throughput, fairness, and stability of actuation (to avoid thrashing). A useful extension is a \emph{multi-objective controller} that explicitly trades off:
+\[
+\min \ \alpha \cdot \text{P99}_{\text{control}} + \beta \cdot \text{slowdown}_{\text{batch}} + \gamma \cdot \|\Delta f\|
+\]
+subject to the power cap and discrete DVFS states. This would make the idea of not killing batch jobs completely measurable and tunable, rather than qualitative. 
+
+\paragraph{Model-predictive control (MPC) for bursty traffic}
+A recurring theme we saw is that burstiness dominates tails. Reactive thresholding and PID can lag bursts, and occupancy is often a weak proxy for tail behavior. MPC could be a good fit here: it can use a short horizon forecast (e.g., recent injection history and queue trends) to choose frequency actions that are stable and anticipatory. Even a lightweight MPC variant—receding-horizon search over a small discrete action set—could capture most of the benefit without being computationally heavy.
+
+\paragraph{Learning-based policies with safety constraints}
+There is room to explore reinforcement learning (RL) approaches as well, but only if the policy is constrained by safety: never violate the power cap, and never exceed a control SLO by more than some bound. 
+
+\subsection{Better Priority Modeling and Scheduling}
+\label{sec:future_priority}
+
+\paragraph{Beyond two classes}
+This paper uses a clean control vs. batch split. Real services may want to have multiple priority tiers (e.g., interactive, latency-sensitive background, best-effort batch). Extending the framework to 3--4 classes would stress-test whether the gains persist when prioritization is more nuanced than strict binary separation.
+
+\paragraph{Dynamic urgency boosting}
+Static class labeling is a reasonable starting point, but tail events could also come from \emph{misclassified} or \emph{temporally urgent} traffic (e.g., an RPC that becomes urgent because it is late). A future iteration could incorporate urgency boosting based on age, queueing delay, or remaining slack-to-deadline, and then drive DVFS using urgency-weighted signals rather than raw occupancy.
+
+\paragraph{Joint DVFS and arbitration}
+DVFS is only one knob we chose to focus on. Arbitration policy (strict priority, aging, deficit round robin) and VC allocation can possibly dramatically change head-of-line blocking and cross-class interference. An extension is to treat arbitration parameters as part of the control action, enabling the policy to trade “power headroom” against “scheduling headroom” depending on congestion regime.
+
+\subsection{Expanded Experimental Coverage}
+\label{sec:future_experiments}
+
+\paragraph{Workloads closer to production mixtures.}
+The current experiments demonstrate clear trends, but an important next step would be to evaluate on trace mixes that better reflect co-location: multiple services, multiple batch jobs, and diurnal shifts in load. 
+
+We would want to run:
+\begin{itemize}
+  \item More diverse injection patterns (microbursts, phase changes).
+  \item Mixed topologies and routing modes (deterministic vs. adaptive).
+  \item Varying domain granularities (per-router, per-quadrant, per-subnetwork).
+\end{itemize}
+This would clarify which conclusions are topology-specific versus fundamental to DVFS as service-rate control.
+
+\paragraph{Batch impact and end-to-end metrics.}
+This paper focuses on control P99 because it aligns with the research question. A next step is to quantify the batch-side cost: throughput, slowdown, and tail behavior for batch as well. Ideally we would want to degrade batch gracefully and predictably.
+
+\subsection{More Realistic DVFS and Power Modeling}
+\label{sec:future_modeling}
+
+\paragraph{Transition dynamics and overheads.}
+One area that could affect conclusions is DVFS transition modeling. Real DVFS has latency, intermediate steps, and sometimes constraints on how frequently transitions may occur. More realistic modeling would include:
+\begin{itemize}
+  \item Non-zero transition time with settling behavior.
+  \item Discrete voltage/frequency points rather than continuous scaling.
+  \item Switching overheads (energy and/or temporary performance disruption).
+\end{itemize}
+This would make the “stability vs. responsiveness” story in the controller design more grounded.
+
+\section*{Acknowledgment}
+We would like to express our sincere gratitude to Professor Sagar Karandikar for his guidance and support throughout this project. His expertise in the course CS 294-252: Architectures and Systems for Warehouse-Scale Computers was instrumental in shaping the direction of this research. We also want to thank my classmates for their valuable suggestions and feedback during our in-class discussions, which helped refine our approach to priority-aware power management. Finally, we are grateful for the resources provided by the University of California, Berkeley, which made this work possible.
 
 
 \begin{thebibliography}{00}
