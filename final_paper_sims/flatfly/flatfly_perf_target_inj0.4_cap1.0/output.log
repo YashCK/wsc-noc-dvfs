@@ -1,0 +1,4323 @@
+BEGIN Configuration File: /Users/yash/Projects/wsc-noc-dvfs/final_paper_sims/flatfly/flatfly_perf_target_inj0.4_cap1.0/config.cfg
+
+// Final Paper Simulation Config
+// Topology: flatfly, Policy: perf_target
+// Injection Rate: 0.4, Power Cap: 1.0W
+
+// VC Configuration
+read_request_begin_vc  = 0;
+read_request_end_vc    = 5;
+write_reply_begin_vc   = 2;
+write_reply_end_vc     = 7;
+read_reply_begin_vc    = 8;
+read_reply_end_vc      = 12;
+write_request_begin_vc = 10;
+write_request_end_vc   = 15;
+num_vcs     = 16;
+vc_buf_size = 8;
+wait_for_tail_credit = 0;
+vc_allocator = max_size;
+sw_allocator = max_size;
+alloc_iters  = 2;
+credit_delay   = 2;
+routing_delay  = 0;
+vc_alloc_delay = 1;
+sw_alloc_delay = 1;
+st_final_delay = 1;
+input_speedup     = 1;
+output_speedup    = 1;
+internal_speedup  = 1.0;
+
+// Detailed simulation settings (longer runs for accuracy)
+sim_type = latency;
+warmup_periods = 3;
+sim_count = 1;
+sample_period  = 10000;
+max_samples = 15;
+use_read_write = 0;
+batch_size = 10000;
+latency_thres = 5000;
+packet_size = 1;
+
+// Topology
+
+topology = flatfly;
+subnets = 1;
+c  = 4;
+k  = 4;
+n  = 2;
+x  = 4;
+y  = 4;
+xr = 2;
+yr = 2;
+limit = 64;
+routing_function = ran_min;
+
+
+// Traffic - 2 classes with different priorities
+// Using uniform traffic with configurable injection rate
+// Split injection: 30% control (class 0), 70% batch (class 1)
+traffic = uniform;
+injection_rate = {0.12,0.27999999999999997};
+
+// 2-class traffic for SLO-aware policies
+classes = 2;
+class_priority = {1,0};
+class_slo = {50,-1};
+priority_policy = static_class;
+
+// Orion power model
+use_orion = 1;
+Vdd = 1.0;
+Orion_tr = 0.2;
+Orion_Freq = 1e9;
+Orion_inport = 5;
+Orion_outport = 5;
+Orion_bitwidth = 128;
+Orion_vc_class = 1;
+Orion_IsSharedBuffIn = 0;
+Orion_IsSharedBuffOut = 0;
+Orion_crossbar_model = 0;
+Orion_crsbar_degree = 4;
+Orion_Cxbar_Cxpoint = 0;
+Orion_trans_type = 0;
+Orion_IsInBuff = 1;
+Orion_out_buf_size = 0;
+Orion_IsOutBuff = 0;
+Orion_buff_type = 0;
+Orion_in_arb_model = 1;
+Orion_out_arb_model = 1;
+Orion_allocator_model = 1;
+Orion_in_vc_arb_model = 1;
+Orion_out_vc_arb_model = 1;
+wire_length = 1.0;
+
+// Power cap
+power_cap = 1.0;
+
+// DVFS base settings
+dvfs_epoch = 10000;
+dvfs_log_interval = 10000;
+dvfs_freqs = 1.0;
+dvfs_voltages = 1.0;
+router_domains = 0;
+
+// Policy-specific settings
+
+dvfs_policy = perf_target;
+dvfs_min_scale = 0.5;
+dvfs_max_scale = 1.0;
+perf_target_metric = latency;
+perf_target_value = 50.0;
+perf_target_class = 0;
+perf_target_kp = 0.05;
+perf_target_per_router = 1;
+perf_target_headroom_margin = 0.05;
+
+
+// Output files
+latency_csv = latency.csv;
+stall_csv = stalls.csv;
+throughput_csv = throughput.csv;
+summary_csv = summary.csv;
+energy_csv = energy.csv;
+epoch_csv = epoch.csv;
+dvfs_log = power_log;
+output_dir = /Users/yash/Projects/wsc-noc-dvfs/final_paper_sims/flatfly;
+run_name = flatfly_perf_target_inj0.4_cap1.0;
+
+END Configuration File: /Users/yash/Projects/wsc-noc-dvfs/final_paper_sims/flatfly/flatfly_perf_target_inj0.4_cap1.0/config.cfg
+ Flat Bufferfly 
+ k = 4 n = 2 c = 4
+ each switch - total radix =  10
+ # of switches = 16
+ # of channels = 96
+ # of nodes ( size of network ) = 64
+Class 0:
+Packet latency average = 16.7305
+	minimum = 6
+	maximum = 43
+Network latency average = 16.7305
+	minimum = 6
+	maximum = 43
+Slowest packet = 116104
+Flit latency average = 16.7305
+	minimum = 6
+	maximum = 43
+Slowest flit = 116104
+Fragmentation average = 0
+	minimum = 0
+	maximum = 0
+Injected packet rate average = 0.120137
+	minimum = 0.1138 (at node 30)
+	maximum = 0.1294 (at node 3)
+Accepted packet rate average = 0.119934
+	minimum = 0.1106 (at node 31)
+	maximum = 0.1289 (at node 28)
+Injected flit rate average = 0.120137
+	minimum = 0.1138 (at node 30)
+	maximum = 0.1294 (at node 3)
+Accepted flit rate average= 0.119934
+	minimum = 0.1106 (at node 31)
+	maximum = 0.1289 (at node 28)
+Injected packet length average = 1
+Accepted packet length average = 1
+Total in-flight flits = 130 (0 measured)
+Buffer busy stall rate = 0
+Buffer conflict stall rate = 0
+Buffer full stall rate = 0
+Buffer reserved stall rate = 0.00023125
+Crossbar conflict stall rate = 0.430063
+Class 1:
+Packet latency average = 16.8915
+	minimum = 6
+	maximum = 42
+Network latency average = 16.691
+	minimum = 6
+	maximum = 41
+Slowest packet = 96349
+Flit latency average = 16.691
+	minimum = 6
+	maximum = 41
+Slowest flit = 96349
+Fragmentation average = 0
+	minimum = 0
+	maximum = 0
+Injected packet rate average = 0.279075
+	minimum = 0.2682 (at node 2)
+	maximum = 0.2885 (at node 56)
+Accepted packet rate average = 0.278606
+	minimum = 0.2675 (at node 36)
+	maximum = 0.2868 (at node 54)
+Injected flit rate average = 0.279075
+	minimum = 0.2682 (at node 2)
+	maximum = 0.2885 (at node 56)
+Accepted flit rate average= 0.278606
+	minimum = 0.2675 (at node 36)
+	maximum = 0.2868 (at node 54)
+Injected packet length average = 1
+Accepted packet length average = 1
+Total in-flight flits = 305 (0 measured)
+Buffer busy stall rate = 0
+Buffer conflict stall rate = 0
+Buffer full stall rate = 0
+Buffer reserved stall rate = 0.0006625
+Crossbar conflict stall rate = 0.971275
+latency change    = 1
+throughput change = 1
+latency change    = 1
+throughput change = 1
+DVFS epoch t=10000 total_power=0.71974 headroom=0.28026 avg_power=0.71974 domains{0:freq=1,power=0.71974} routers{0:freq=1,power=0.0450147, 1:freq=1,power=0.0449747, 2:freq=1,power=0.0449776, 3:freq=1,power=0.0450061, 4:freq=1,power=0.0449376, 5:freq=1,power=0.0449586, 6:freq=1,power=0.0449794, 7:freq=1,power=0.0449517, 8:freq=1,power=0.0449767, 9:freq=1,power=0.0449873, 10:freq=1,power=0.0449582, 11:freq=1,power=0.0450018, 12:freq=1,power=0.045034, 13:freq=1,power=0.0449815, 14:freq=1,power=0.0449822, 15:freq=1,power=0.045018}
+PERF_TARGET_DIFF: epoch=1 latency=27 target=50 latency_ok=1 budget=1 headroom=0.28026
+Class 0:
+Packet latency average = 17.4365
+	minimum = 6
+	maximum = 54
+Network latency average = 17.4365
+	minimum = 6
+	maximum = 54
+Slowest packet = 497854
+Flit latency average = 17.4365
+	minimum = 6
+	maximum = 54
+Slowest flit = 497854
+Fragmentation average = 0
+	minimum = 0
+	maximum = 0
+Injected packet rate average = 0.120087
+	minimum = 0.11325 (at node 13)
+	maximum = 0.12565 (at node 57)
+Accepted packet rate average = 0.119994
+	minimum = 0.11555 (at node 31)
+	maximum = 0.12505 (at node 57)
+Injected flit rate average = 0.120087
+	minimum = 0.11325 (at node 13)
+	maximum = 0.12565 (at node 57)
+Accepted flit rate average= 0.119994
+	minimum = 0.11555 (at node 31)
+	maximum = 0.12505 (at node 57)
+Injected packet length average = 1
+Accepted packet length average = 1
+Total in-flight flits = 120 (0 measured)
+Buffer busy stall rate = 0
+Buffer conflict stall rate = 0
+Buffer full stall rate = 0
+Buffer reserved stall rate = 0.00026875
+Crossbar conflict stall rate = 0.474375
+Class 1:
+Packet latency average = 17.5806
+	minimum = 6
+	maximum = 57
+Network latency average = 17.382
+	minimum = 6
+	maximum = 57
+Slowest packet = 271890
+Flit latency average = 17.382
+	minimum = 6
+	maximum = 57
+Slowest flit = 271890
+Fragmentation average = 0
+	minimum = 0
+	maximum = 0
+Injected packet rate average = 0.279451
+	minimum = 0.27225 (at node 25)
+	maximum = 0.2878 (at node 56)
+Accepted packet rate average = 0.27921
+	minimum = 0.2722 (at node 62)
+	maximum = 0.28615 (at node 27)
+Injected flit rate average = 0.279451
+	minimum = 0.27225 (at node 25)
+	maximum = 0.2878 (at node 56)
+Accepted flit rate average= 0.27921
+	minimum = 0.2722 (at node 62)
+	maximum = 0.28615 (at node 27)
+Injected packet length average = 1
+Accepted packet length average = 1
+Total in-flight flits = 309 (0 measured)
+Buffer busy stall rate = 0
+Buffer conflict stall rate = 0
+Buffer full stall rate = 0
+Buffer reserved stall rate = 0.000728125
+Crossbar conflict stall rate = 1.07272
+latency change    = 0.0404915
+throughput change = 0.000494817
+latency change    = 0.0391943
+throughput change = 0.00216291
+DVFS epoch t=20000 total_power=0.686681 headroom=0.313319 avg_power=0.703211 domains{0:freq=1,power=0.686681} routers{0:freq=1,power=0.0461768, 1:freq=1,power=0.0461932, 2:freq=1,power=0.0461806, 3:freq=0.9,power=0.0421092, 4:freq=1,power=0.046124, 5:freq=1,power=0.0461566, 6:freq=0.9,power=0.0421624, 7:freq=0.9,power=0.0421717, 8:freq=0.9,power=0.0421452, 9:freq=0.9,power=0.0421874, 10:freq=0.9,power=0.0421916, 11:freq=0.8,power=0.0381804, 12:freq=1,power=0.0461881, 13:freq=0.8,power=0.0381787, 14:freq=0.9,power=0.0422068, 15:freq=0.8,power=0.0381286}
+PERF_TARGET_DIFF: epoch=2 latency=26 target=50 latency_ok=1 budget=1 headroom=0.313319
+Class 0:
+Packet latency average = 17.3644
+	minimum = 6
+	maximum = 48
+Network latency average = 17.3644
+	minimum = 6
+	maximum = 48
+Slowest packet = 743932
+Flit latency average = 17.3644
+	minimum = 6
+	maximum = 48
+Slowest flit = 743932
+Fragmentation average = 0
+	minimum = 0
+	maximum = 0
+Injected packet rate average = 0.120053
+	minimum = 0.113 (at node 9)
+	maximum = 0.1255 (at node 52)
+Accepted packet rate average = 0.12005
+	minimum = 0.1129 (at node 18)
+	maximum = 0.1282 (at node 43)
+Injected flit rate average = 0.120053
+	minimum = 0.113 (at node 9)
+	maximum = 0.1255 (at node 52)
+Accepted flit rate average= 0.12005
+	minimum = 0.1129 (at node 18)
+	maximum = 0.1282 (at node 43)
+Injected packet length average = 1
+Accepted packet length average = 1
+Total in-flight flits = 122 (0 measured)
+Buffer busy stall rate = 0
+Buffer conflict stall rate = 0
+Buffer full stall rate = 0
+Buffer reserved stall rate = 0.00069375
+Crossbar conflict stall rate = 0.467925
+Class 1:
+Packet latency average = 17.5445
+	minimum = 6
+	maximum = 52
+Network latency average = 17.3459
+	minimum = 6
+	maximum = 51
+Slowest packet = 614261
+Flit latency average = 17.3459
+	minimum = 6
+	maximum = 51
+Slowest flit = 614261
+Fragmentation average = 0
+	minimum = 0
+	maximum = 0
+Injected packet rate average = 0.279328
+	minimum = 0.2712 (at node 19)
+	maximum = 0.2881 (at node 40)
+Accepted packet rate average = 0.27932
+	minimum = 0.2676 (at node 60)
+	maximum = 0.2925 (at node 37)
+Injected flit rate average = 0.279328
+	minimum = 0.2712 (at node 19)
+	maximum = 0.2881 (at node 40)
+Accepted flit rate average= 0.27932
+	minimum = 0.2676 (at node 60)
+	maximum = 0.2925 (at node 37)
+Injected packet length average = 1
+Accepted packet length average = 1
+Total in-flight flits = 320 (0 measured)
+Buffer busy stall rate = 0
+Buffer conflict stall rate = 0
+Buffer full stall rate = 0
+Buffer reserved stall rate = 0.00158125
+Crossbar conflict stall rate = 1.0528
+latency change    = 0.00415453
+throughput change = 0.000468555
+latency change    = 0.00205747
+throughput change = 0.000394373
+Warmed up ...Time used is 30000 cycles
+DVFS epoch t=30000 total_power=0.732742 headroom=0.267258 avg_power=0.713054 domains{0:freq=1,power=0.732742} routers{0:freq=1,power=0.0473156, 1:freq=1,power=0.047372, 2:freq=1,power=0.0473438, 3:freq=1,power=0.0473327, 4:freq=1,power=0.0473385, 5:freq=0.9,power=0.0431979, 6:freq=1,power=0.0473399, 7:freq=0.9,power=0.0432333, 8:freq=0.9,power=0.0432392, 9:freq=0.9,power=0.0431967, 10:freq=1,power=0.0473557, 11:freq=1,power=0.0473321, 12:freq=0.8,power=0.0390996, 13:freq=1,power=0.0473562, 14:freq=1,power=0.0473653, 15:freq=1,power=0.047323}
+PERF_TARGET_DIFF: epoch=3 latency=0 target=50 latency_ok=1 budget=1 headroom=0.267258
+Class 0:
+Packet latency average = 18.3814
+	minimum = 6
+	maximum = 54
+Network latency average = 18.3814
+	minimum = 6
+	maximum = 54
+Slowest packet = 1011079
+Flit latency average = 18.3828
+	minimum = 6
+	maximum = 54
+Slowest flit = 1011079
+Fragmentation average = 0
+	minimum = 0
+	maximum = 0
+Injected packet rate average = 0.120538
+	minimum = 0.1142 (at node 53)
+	maximum = 0.1283 (at node 56)
+Accepted packet rate average = 0.120486
+	minimum = 0.1116 (at node 16)
+	maximum = 0.1295 (at node 47)
+Injected flit rate average = 0.120538
+	minimum = 0.1142 (at node 53)
+	maximum = 0.1283 (at node 56)
+Accepted flit rate average= 0.120486
+	minimum = 0.1116 (at node 16)
+	maximum = 0.1295 (at node 47)
+Injected packet length average = 1
+Accepted packet length average = 1
+Total in-flight flits = 155 (155 measured)
+Buffer busy stall rate = 0
+Buffer conflict stall rate = 0
+Buffer full stall rate = 0
+Buffer reserved stall rate = 0.00075625
+Crossbar conflict stall rate = 0.5336
+Class 1:
+Packet latency average = 18.5462
+	minimum = 6
+	maximum = 60
+Network latency average = 18.3423
+	minimum = 6
+	maximum = 60
+Slowest packet = 907401
+Flit latency average = 18.3438
+	minimum = 6
+	maximum = 60
+Slowest flit = 907401
+Fragmentation average = 0
+	minimum = 0
+	maximum = 0
+Injected packet rate average = 0.279794
+	minimum = 0.2684 (at node 23)
+	maximum = 0.2902 (at node 20)
+Accepted packet rate average = 0.279775
+	minimum = 0.2649 (at node 6)
+	maximum = 0.2927 (at node 3)
+Injected flit rate average = 0.279794
+	minimum = 0.2684 (at node 23)
+	maximum = 0.2902 (at node 20)
+Accepted flit rate average= 0.279775
+	minimum = 0.2649 (at node 6)
+	maximum = 0.2927 (at node 3)
+Injected packet length average = 1
+Accepted packet length average = 1
+Total in-flight flits = 330 (330 measured)
+Buffer busy stall rate = 0
+Buffer conflict stall rate = 0
+Buffer full stall rate = 0
+Buffer reserved stall rate = 0.00145
+Crossbar conflict stall rate = 1.2171
+latency change    = 0.0553278
+throughput change = 0.00361816
+latency change    = 0.0540123
+throughput change = 0.00162519
+DVFS epoch t=40000 total_power=0.712868 headroom=0.287132 avg_power=0.713008 domains{0:freq=1,power=0.712868} routers{0:freq=1,power=0.048565, 1:freq=0.9,power=0.044288, 2:freq=1,power=0.0485182, 3:freq=0.9,power=0.0442467, 4:freq=0.8,power=0.0400435, 5:freq=0.9,power=0.0442838, 6:freq=0.8,power=0.0400778, 7:freq=0.9,power=0.0443102, 8:freq=0.9,power=0.0443308, 9:freq=0.8,power=0.0400326, 10:freq=0.8,power=0.039972, 11:freq=0.9,power=0.0443007, 12:freq=1,power=0.0485571, 13:freq=1,power=0.0485375, 14:freq=0.9,power=0.0442709, 15:freq=1,power=0.0485329}
+PERF_TARGET_DIFF: epoch=4 latency=31 target=50 latency_ok=1 budget=1 headroom=0.287132
+Class 0:
+Packet latency average = 18.0928
+	minimum = 6
+	maximum = 54
+Network latency average = 18.0928
+	minimum = 6
+	maximum = 54
+Slowest packet = 1011079
+Flit latency average = 18.0938
+	minimum = 6
+	maximum = 54
+Slowest flit = 1011079
+Fragmentation average = 0
+	minimum = 0
+	maximum = 0
+Injected packet rate average = 0.12012
+	minimum = 0.1152 (at node 6)
+	maximum = 0.12565 (at node 21)
+Accepted packet rate average = 0.120115
+	minimum = 0.11475 (at node 4)
+	maximum = 0.12615 (at node 31)
+Injected flit rate average = 0.12012
+	minimum = 0.1152 (at node 6)
+	maximum = 0.12565 (at node 21)
+Accepted flit rate average= 0.120115
+	minimum = 0.11475 (at node 4)
+	maximum = 0.12615 (at node 31)
+Injected packet length average = 1
+Accepted packet length average = 1
+Total in-flight flits = 129 (129 measured)
+Buffer busy stall rate = 0
+Buffer conflict stall rate = 0
+Buffer full stall rate = 0
+Buffer reserved stall rate = 0.000553125
+Crossbar conflict stall rate = 0.512575
+Class 1:
+Packet latency average = 18.2611
+	minimum = 6
+	maximum = 60
+Network latency average = 18.0601
+	minimum = 6
+	maximum = 60
+Slowest packet = 907401
+Flit latency average = 18.0611
+	minimum = 6
+	maximum = 60
+Slowest flit = 907401
+Fragmentation average = 0
+	minimum = 0
+	maximum = 0
+Injected packet rate average = 0.279366
+	minimum = 0.274 (at node 55)
+	maximum = 0.28865 (at node 15)
+Accepted packet rate average = 0.279368
+	minimum = 0.27005 (at node 6)
+	maximum = 0.28715 (at node 3)
+Injected flit rate average = 0.279366
+	minimum = 0.274 (at node 55)
+	maximum = 0.28865 (at node 15)
+Accepted flit rate average= 0.279368
+	minimum = 0.27005 (at node 6)
+	maximum = 0.28715 (at node 3)
+Injected packet length average = 1
+Accepted packet length average = 1
+Total in-flight flits = 312 (312 measured)
+Buffer busy stall rate = 0
+Buffer conflict stall rate = 0
+Buffer full stall rate = 0
+Buffer reserved stall rate = 0.00120937
+Crossbar conflict stall rate = 1.16702
+latency change    = 0.0159501
+throughput change = 0.00308949
+latency change    = 0.0156122
+throughput change = 0.00145697
+DVFS epoch t=50000 total_power=0.751386 headroom=0.248614 avg_power=0.720683 domains{0:freq=1,power=0.751386} routers{0:freq=1,power=0.0497138, 1:freq=1,power=0.049661, 2:freq=0.9,power=0.0453345, 3:freq=0.9,power=0.0453548, 4:freq=1,power=0.0496796, 5:freq=0.8,power=0.0409413, 6:freq=1,power=0.0497041, 7:freq=1,power=0.0497018, 8:freq=1,power=0.0496541, 9:freq=1,power=0.0496981, 10:freq=0.9,power=0.0453097, 11:freq=1,power=0.0496745, 12:freq=0.9,power=0.0453414, 13:freq=0.8,power=0.040984, 14:freq=0.9,power=0.0453433, 15:freq=0.9,power=0.0452904}
+PERF_TARGET_DIFF: epoch=5 latency=30 target=50 latency_ok=1 budget=1 headroom=0.248614
+Class 0:
+Packet latency average = 17.7531
+	minimum = 6
+	maximum = 54
+Network latency average = 17.7531
+	minimum = 6
+	maximum = 54
+Slowest packet = 1011079
+Flit latency average = 17.7539
+	minimum = 6
+	maximum = 54
+Slowest flit = 1011079
+Fragmentation average = 0
+	minimum = 0
+	maximum = 0
+Injected packet rate average = 0.120152
+	minimum = 0.116167 (at node 27)
+	maximum = 0.125033 (at node 8)
+Accepted packet rate average = 0.120151
+	minimum = 0.1163 (at node 4)
+	maximum = 0.1262 (at node 28)
+Injected flit rate average = 0.120152
+	minimum = 0.116167 (at node 27)
+	maximum = 0.125033 (at node 8)
+Accepted flit rate average= 0.120151
+	minimum = 0.1163 (at node 4)
+	maximum = 0.1262 (at node 28)
+Injected packet length average = 1
+Accepted packet length average = 1
+Total in-flight flits = 124 (124 measured)
+Buffer busy stall rate = 0
+Buffer conflict stall rate = 0
+Buffer full stall rate = 0
+Buffer reserved stall rate = 0.0004625
+Crossbar conflict stall rate = 0.493771
+Class 1:
+Packet latency average = 17.915
+	minimum = 6
+	maximum = 60
+Network latency average = 17.7133
+	minimum = 6
+	maximum = 60
+Slowest packet = 907401
+Flit latency average = 17.7141
+	minimum = 6
+	maximum = 60
+Slowest flit = 907401
+Fragmentation average = 0
+	minimum = 0
+	maximum = 0
+Injected packet rate average = 0.27994
+	minimum = 0.275033 (at node 19)
+	maximum = 0.289467 (at node 15)
+Accepted packet rate average = 0.279956
+	minimum = 0.271667 (at node 6)
+	maximum = 0.285933 (at node 21)
+Injected flit rate average = 0.27994
+	minimum = 0.275033 (at node 19)
+	maximum = 0.289467 (at node 15)
+Accepted flit rate average= 0.279956
+	minimum = 0.271667 (at node 6)
+	maximum = 0.285933 (at node 21)
+Injected packet length average = 1
+Accepted packet length average = 1
+Total in-flight flits = 285 (285 measured)
+Buffer busy stall rate = 0
+Buffer conflict stall rate = 0
+Buffer full stall rate = 0
+Buffer reserved stall rate = 0.00109792
+Crossbar conflict stall rate = 1.12239
+latency change    = 0.0191335
+throughput change = 0.00030127
+latency change    = 0.0193186
+throughput change = 0.00209948
+DVFS epoch t=60000 total_power=0.801154 headroom=0.198846 avg_power=0.734095 domains{0:freq=1,power=0.801154} routers{0:freq=1,power=0.0509298, 1:freq=1,power=0.0509386, 2:freq=1,power=0.0509371, 3:freq=1,power=0.0509165, 4:freq=0.9,power=0.0464413, 5:freq=1,power=0.0509129, 6:freq=1,power=0.0508983, 7:freq=1,power=0.0509385, 8:freq=1,power=0.0508908, 9:freq=0.9,power=0.046396, 10:freq=1,power=0.0508933, 11:freq=1,power=0.0508923, 12:freq=1,power=0.0509199, 13:freq=1,power=0.0508846, 14:freq=0.9,power=0.0464449, 15:freq=1,power=0.0509197}
+PERF_TARGET_DIFF: epoch=6 latency=28 target=50 latency_ok=1 budget=1 headroom=0.198846
+Class 0:
+Packet latency average = 17.7059
+	minimum = 6
+	maximum = 54
+Network latency average = 17.7059
+	minimum = 6
+	maximum = 54
+Slowest packet = 1011079
+Flit latency average = 17.7065
+	minimum = 6
+	maximum = 54
+Slowest flit = 1011079
+Fragmentation average = 0
+	minimum = 0
+	maximum = 0
+Injected packet rate average = 0.120149
+	minimum = 0.1156 (at node 27)
+	maximum = 0.1245 (at node 21)
+Accepted packet rate average = 0.120143
+	minimum = 0.114925 (at node 4)
+	maximum = 0.126725 (at node 28)
+Injected flit rate average = 0.120149
+	minimum = 0.1156 (at node 27)
+	maximum = 0.1245 (at node 21)
+Accepted flit rate average= 0.120143
+	minimum = 0.114925 (at node 4)
+	maximum = 0.126725 (at node 28)
+Injected packet length average = 1
+Accepted packet length average = 1
+Total in-flight flits = 139 (139 measured)
+Buffer busy stall rate = 0
+Buffer conflict stall rate = 0
+Buffer full stall rate = 0
+Buffer reserved stall rate = 0.000507813
+Crossbar conflict stall rate = 0.489006
+Class 1:
+Packet latency average = 17.8623
+	minimum = 6
+	maximum = 60
+Network latency average = 17.6608
+	minimum = 6
+	maximum = 60
+Slowest packet = 907401
+Flit latency average = 17.6615
+	minimum = 6
+	maximum = 60
+Slowest flit = 907401
+Fragmentation average = 0
+	minimum = 0
+	maximum = 0
+Injected packet rate average = 0.279739
+	minimum = 0.275275 (at node 55)
+	maximum = 0.28815 (at node 15)
+Accepted packet rate average = 0.279737
+	minimum = 0.27315 (at node 40)
+	maximum = 0.28425 (at node 3)
+Injected flit rate average = 0.279739
+	minimum = 0.275275 (at node 55)
+	maximum = 0.28815 (at node 15)
+Accepted flit rate average= 0.279737
+	minimum = 0.27315 (at node 40)
+	maximum = 0.28425 (at node 3)
+Injected packet length average = 1
+Accepted packet length average = 1
+Total in-flight flits = 320 (320 measured)
+Buffer busy stall rate = 0
+Buffer conflict stall rate = 0
+Buffer full stall rate = 0
+Buffer reserved stall rate = 0.00127344
+Crossbar conflict stall rate = 1.10781
+latency change    = 0.00266627
+throughput change = 7.04458e-05
+latency change    = 0.00295014
+throughput change = 0.000780121
+Draining all recorded packets ...
+DVFS epoch t=70000 total_power=0.800666 headroom=0.199334 avg_power=0.743605 domains{0:freq=1,power=0.800666} routers{0:freq=1,power=0.0520395, 1:freq=1,power=0.0520643, 2:freq=1,power=0.0520518, 3:freq=0.9,power=0.0474518, 4:freq=1,power=0.0520737, 5:freq=0.8,power=0.0428793, 6:freq=1,power=0.0520564, 7:freq=1,power=0.0520577, 8:freq=1,power=0.0520499, 9:freq=1,power=0.0520335, 10:freq=0.8,power=0.042903, 11:freq=1,power=0.0520513, 12:freq=0.9,power=0.0474271, 13:freq=1,power=0.0520626, 14:freq=0.9,power=0.0474067, 15:freq=1,power=0.0520573}
+PERF_TARGET_DIFF: epoch=7 latency=30 target=50 latency_ok=1 budget=1 headroom=0.199334
+Draining remaining packets ...
+Time taken is 70061 cycles
+====== Overall Traffic Statistics ======
+====== Traffic class 0 ======
+Packet latency average = 17.7069 (1 samples)
+	minimum = 6 (1 samples)
+	maximum = 54 (1 samples)
+Network latency average = 17.7069 (1 samples)
+	minimum = 6 (1 samples)
+	maximum = 54 (1 samples)
+Flit latency average = 17.707 (1 samples)
+	minimum = 6 (1 samples)
+	maximum = 54 (1 samples)
+Fragmentation average = 0 (1 samples)
+	minimum = 0 (1 samples)
+	maximum = 0 (1 samples)
+Injected packet rate average = 0.120149 (1 samples)
+	minimum = 0.1156 (1 samples)
+	maximum = 0.1245 (1 samples)
+Accepted packet rate average = 0.120143 (1 samples)
+	minimum = 0.114925 (1 samples)
+	maximum = 0.126725 (1 samples)
+Injected flit rate average = 0.120149 (1 samples)
+	minimum = 0.1156 (1 samples)
+	maximum = 0.1245 (1 samples)
+Accepted flit rate average = 0.120143 (1 samples)
+	minimum = 0.114925 (1 samples)
+	maximum = 0.126725 (1 samples)
+Injected packet size average = 1 (1 samples)
+Accepted packet size average = 1 (1 samples)
+Hops average = 2.50163 (1 samples)
+Buffer busy stall rate = 0 (1 samples)
+Buffer conflict stall rate = 0 (1 samples)
+Buffer full stall rate = 0 (1 samples)
+Buffer reserved stall rate = 0.000507813 (1 samples)
+Crossbar conflict stall rate = 0.489006 (1 samples)
+====== Traffic class 1 ======
+Packet latency average = 17.863 (1 samples)
+	minimum = 6 (1 samples)
+	maximum = 60 (1 samples)
+Network latency average = 17.6615 (1 samples)
+	minimum = 6 (1 samples)
+	maximum = 60 (1 samples)
+Flit latency average = 17.6621 (1 samples)
+	minimum = 6 (1 samples)
+	maximum = 60 (1 samples)
+Fragmentation average = 0 (1 samples)
+	minimum = 0 (1 samples)
+	maximum = 0 (1 samples)
+Injected packet rate average = 0.279739 (1 samples)
+	minimum = 0.275275 (1 samples)
+	maximum = 0.28815 (1 samples)
+Accepted packet rate average = 0.279737 (1 samples)
+	minimum = 0.27315 (1 samples)
+	maximum = 0.28425 (1 samples)
+Injected flit rate average = 0.279739 (1 samples)
+	minimum = 0.275275 (1 samples)
+	maximum = 0.28815 (1 samples)
+Accepted flit rate average = 0.279737 (1 samples)
+	minimum = 0.27315 (1 samples)
+	maximum = 0.28425 (1 samples)
+Injected packet size average = 1 (1 samples)
+Accepted packet size average = 1 (1 samples)
+Hops average = 2.49955 (1 samples)
+Buffer busy stall rate = 0 (1 samples)
+Buffer conflict stall rate = 0 (1 samples)
+Buffer full stall rate = 0 (1 samples)
+Buffer reserved stall rate = 0.00127344 (1 samples)
+Crossbar conflict stall rate = 1.10781 (1 samples)
+Total run time 63.0098
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+2.8975e-11
+4.38691e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+2.8975e-11
+4.38366e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+2.8975e-11
+4.3839e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+2.8975e-11
+4.3862e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+2.8975e-11
+4.38066e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+2.8975e-11
+4.38235e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+2.8975e-11
+4.38403e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+2.8975e-11
+4.38179e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+2.8975e-11
+4.38382e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+2.8975e-11
+4.38468e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+2.8975e-11
+4.38232e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+2.8975e-11
+4.38584e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+2.8975e-11
+4.38847e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+2.8975e-11
+4.3842e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+2.8975e-11
+4.38426e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+2.8975e-11
+4.38716e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.01535e-11
+4.5034e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.01535e-11
+4.50472e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.01535e-11
+4.5037e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.01535e-11
+4.55295e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.01535e-11
+4.49911e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.01535e-11
+4.50174e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.01535e-11
+4.55775e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.01535e-11
+4.55858e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.01535e-11
+4.55619e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.01535e-11
+4.56e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.01535e-11
+4.56038e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.01535e-11
+4.62899e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.01535e-11
+4.5043e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.01535e-11
+4.62881e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.01535e-11
+4.56174e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.01535e-11
+4.62371e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.1332e-11
+4.61803e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.1332e-11
+4.62259e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.1332e-11
+4.62031e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.1332e-11
+4.61941e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.1332e-11
+4.61987e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.1332e-11
+4.67334e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.1332e-11
+4.62e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.1332e-11
+4.67652e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.1332e-11
+4.67705e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.1332e-11
+4.67322e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.1332e-11
+4.62127e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.1332e-11
+4.61935e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.1332e-11
+4.74447e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.1332e-11
+4.62132e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.1332e-11
+4.62205e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.1332e-11
+4.61864e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.25105e-11
+4.74163e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.25105e-11
+4.79383e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.25105e-11
+4.73783e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.25105e-11
+4.79011e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.25105e-11
+4.86241e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.25105e-11
+4.79344e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.25105e-11
+4.86588e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.25105e-11
+4.79584e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.25105e-11
+4.79769e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.25105e-11
+4.86129e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.25105e-11
+4.85514e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.25105e-11
+4.79498e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.25105e-11
+4.74098e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.25105e-11
+4.7394e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.25105e-11
+4.79229e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.25105e-11
+4.73902e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.3689e-11
+4.85706e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.3689e-11
+4.85279e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.3689e-11
+4.91041e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.3689e-11
+4.91223e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.3689e-11
+4.85429e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.3689e-11
+4.97568e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.3689e-11
+4.85628e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.3689e-11
+4.8561e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.3689e-11
+4.85223e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.3689e-11
+4.85579e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.3689e-11
+4.90818e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.3689e-11
+4.85388e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.3689e-11
+4.91102e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.3689e-11
+4.98001e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.3689e-11
+4.9112e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.3689e-11
+4.90642e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.48675e-11
+4.97796e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.48675e-11
+4.97867e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.48675e-11
+4.97855e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.48675e-11
+4.97688e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.48675e-11
+5.0324e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.48675e-11
+4.97659e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.48675e-11
+4.97539e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.48675e-11
+4.97866e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.48675e-11
+4.97479e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.48675e-11
+5.02834e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.48675e-11
+4.97499e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.48675e-11
+4.97491e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.48675e-11
+4.97715e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.48675e-11
+4.97429e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.48675e-11
+5.03273e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.48675e-11
+4.97714e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.60459e-11
+5.09023e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.60459e-11
+5.09223e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.60459e-11
+5.09122e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.60459e-11
+5.14575e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.60459e-11
+5.09302e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.60459e-11
+5.2167e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.60459e-11
+5.0916e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.60459e-11
+5.0917e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.60459e-11
+5.09108e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.60459e-11
+5.08974e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.60459e-11
+5.2191e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.60459e-11
+5.09118e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.60459e-11
+5.14353e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.60459e-11
+5.0921e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.60459e-11
+5.14168e-11
+1.85573e-13
+1.01182e-14
+8.2655e-14
+1.09233e-13
+1.89983e-13
+5.84568e-13
+3.37458e-13
+1.11201e-12
+8.52002e-14
+1.49959e-12
+4.63932e-14
+1.01182e-14
+2.06637e-14
+1.56046e-14
+1.89983e-13
+8.35097e-14
+8.43644e-14
+3.57857e-13
+2.13e-14
+4.50637e-13
+2.31966e-14
+1.01182e-14
+3.3062e-13
+4.83744e-13
+1.89983e-13
+2.5888e-12
+1.34983e-12
+4.12861e-12
+3.40801e-13
+4.97629e-12
+3.60459e-11
+5.09167e-11

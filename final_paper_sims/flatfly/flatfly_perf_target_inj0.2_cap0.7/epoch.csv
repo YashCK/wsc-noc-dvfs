@@ -1,0 +1,7 @@
+epoch,time,total_power,headroom,avg_power,class0_p50,class0_p95,class0_p99,class0_qdel_p99,class0_throughput,class0_stall_busy_rate,class0_stall_full_rate,class0_stall_conflict_rate,class0_stall_reserved_rate,class0_stall_xbar_rate,class1_p50,class1_p95,class1_p99,class1_qdel_p99,class1_throughput,class1_stall_busy_rate,class1_stall_full_rate,class1_stall_conflict_rate,class1_stall_reserved_rate,class1_stall_xbar_rate
+1,10000,0.671601,0.0283985,0.671601,16,22,24,0,3.8437,0,0,0,6.25e-06,0.07235,16,22,24,1,8.9454,0,0,0,0,0.165644
+2,20000,0.670362,0.0296384,0.670982,15,16,16,0,0.0004,0,0,0,0,0,12,17,17,0,0.0005,0,0,0,0,0
+3,30000,0.638899,0.061101,0.660287,0,0,0,0,0.0003,0,0,0,0,0,0,0,0,0,0.0009,0,0,0,0,0
+4,40000,0.630508,0.069492,0.652843,18,24,27,0,3.8148,0,0,0,0,0.0936,18,24,27,1,8.9921,0,0,0,0,0.219169
+5,50000,0.677042,0.0229578,0.657682,17,24,27,0,3.8088,0,0,0,0,0.088025,17,24,27,1,8.9488,0,0,0,0,0.203081
+6,60000,0.69439,0.00560952,0.6638,17,24,26,0,3.8518,0,0,0,0,0.0880875,17,24,26,1,9.0121,0,0,0,0,0.203106

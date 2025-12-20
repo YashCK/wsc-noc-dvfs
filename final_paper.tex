@@ -53,8 +53,29 @@ We explore the question of how a priority-aware NoC DVFS policy can keep control
 \subsection{Control vs.\ batch traffic and SLO definition}
 We model two packet classes. \emph{Control-class} packets (class 0 in our traces) represent latency-sensitive messages whose delay can directly stall cores or elongate critical paths (e.g., coherence commands/acks, synchronization). \emph{Batch-class} packets (class 1) represent throughput-oriented transfers (e.g., bulk data movement or cache-line payload responses) that can tolerate additional latency. This two-class abstraction matches WSC power-management practice, where batch work is typically slowed first during power emergencies \cite{li_thunderbolt_osdi20}. Since absolute cycle targets vary by microarchitecture, we define the control SLO \emph{relative to a practical baseline}: do no worse than uniform NoC throttling at the same power cap. A priority-aware policy is successful if it stays power-safe while reducing control-class \texttt{P99} versus uniform DVFS, accepting some batch performance loss if needed.
 
-\subsection{Talk about Flit Reordering problem}
-TODO: Give some context about the problem and talk about the FIFOs we added and why it works, and how we guarantee it wont break.
+\subsection{Microarchitectural Considerations: Flit Reordering and FIFOs}
+\label{sec:flit-reorder-fifos}
+
+\paragraph{Why this matters under NoC DVFS}
+Applying DVFS to routers and links changes the \emph{service rate} of buffers and arbiters without changing the \emph{arrival process} (packet injection). When DVFS is applied heterogeneously across domains (e.g., per-router or per-region), adjacent routers may operate at different effective speeds. This creates transient \emph{rate mismatch} at domain boundaries, where an upstream router can deliver flits faster than the downstream router can drain them (or vice versa). The mismatch amplifies queueing and can manifest as head-of-line (HoL) blocking for latency-critical control traffic, even if average utilization is moderate. Therefore, DVFS-aware design must explicitly consider buffering, backpressure, and ordering constraints.
+
+\paragraph{Flit-level Behavior and Ordering}
+In wormhole routers, packets are decomposed into flits that traverse the network subject to flow control. Many architectures preserve in-order delivery per flow/VC, but DVFS-induced stalls can cause flits of different packets and/or different classes to interleave differently at routers, especially when:
+(i) adaptive routing is enabled,
+(ii) VCs are shared across classes, or
+(iii) arbitration priorities change dynamically based on class-aware policies.
+If the model allows multiple paths or multiple outstanding packets per flow, differences in per-hop service rate can also create packet-level reordering at the destination unless additional constraints are enforced.
+
+\paragraph{FIFO design points in the simulator/model.}
+To keep the evaluation faithful while avoiding artifacts, we adopt the following model assumptions:
+\begin{itemize}
+  \item \textbf{Per-VC input FIFOs.} Each input port maintains per-VC FIFOs with credit-based backpressure; DVFS scales the dequeue/service rate (pipeline progress) but does not alter credit semantics.
+  \item \textbf{Class separation.} Control (class~0) and batch (class~1) traffic are either assigned dedicated VCs or use a shared VC with strict-priority arbitration. Dedicated VCs eliminate cross-class HoL blocking at the expense of VC resources; shared VCs more closely mimic deployments where QoS is enforced by priority alone.
+  \item \textbf{Boundary buffering.} At DVFS domain boundaries, we ensure sufficient buffering to absorb short rate mismatches. In practice, this is modeled via input FIFO depth and/or an explicit boundary FIFO. 
+\end{itemize}
+
+\paragraph{Implication for control objectives}
+These microarchitectural effects directly tie into our control policy. A DVFS reduction in a congested region increases effective queuing delay superlinearly near saturation, so policies that rely purely on average occupancy can inadvertently violate control-class P99. Conversely, targeted DVFS increases in hot spots can ``unlock'' blocked FIFOs and reduce tail latency without increasing system-wide power, motivating domain-level actuation rather than uniform throttling.
 
 \section{Related Work}
 \subsection{Priority-aware power capping in WSCs}
@@ -78,7 +99,20 @@ Dynamic voltage and frequency scaling (DVFS) trades performance for power by adj
 DVFS can be applied globally (one domain for the entire NoC) or in multiple voltage-frequency islands that scale independently. Finer granularity enables targeted throttling: domains that primarily carry batch traffic can be slowed while preserving frequency along control-critical routes. However, finer granularity also increases hardware cost and can complicate control. Due to a limitation of time, we focus our evaluation of router-level domain control to understand and quantify the returns of our control policies.
 
 \subsection{Transition latency and control stability}
-DVFS transitions are not instantaneous: voltage changes require regulator settling, and frequent toggling can waste time and harm latency. At WSC scale, demand variability and control-loop stability are central challenges for power capping \cite{bhattacharya_speed_stability_igcc12}; similar issues appear on-chip when DVFS is driven by bursty injection and localized congestion. We choose an epoch length of TODO because TODO.
+DVFS transitions are not instantaneous: voltage changes require regulator settling, and frequent toggling can waste time and harm latency. At WSC scale, demand variability and control-loop stability are central challenges for power capping \cite{bhattacharya_speed_stability_igcc12}; similar issues appear on-chip when DVFS is driven by bursty injection and localized congestion. 
+
+\paragraph{Hysteresis, quantization, and actuation granularity.}
+NoC DVFS typically supports only a finite set of frequency points and may apply per-domain rather than per-router in real systems. Quantization can cause limit cycles when the operating point hovers near a threshold. To mitigate this, we incorporate:
+\begin{itemize}
+  \item \textbf{Hysteresis} on occupancy/latency thresholds to prevent frequent toggling,
+  \item \textbf{Rate limiting} (e.g., max $\Delta f$ per epoch) to reduce oscillations,
+  \item \textbf{Minimum dwell time} at a DVFS point to amortize transition overhead.
+\end{itemize}
+
+\paragraph{Mapping DVFS to NoC service.}
+In the model, DVFS scales the effective router pipeline rate and link traversal rate, thereby scaling the \emph{service rate} $\mu$ of queues. From a queueing perspective, reducing frequency increases the utilization $\rho=\lambda/\mu$, and tail latency grows rapidly as $\rho \to 1$. This motivates policies that:
+(i) protect control traffic via an SLO-aware override (boost when control P99 approaches the SLO), and
+(ii) avoid globally reducing $\mu$ uniformly when congestion is localized.
 
 \subsection{DVFS as a NoC service control knob}
 From a queuing perspective, each DVFS decision changes the service rate $\mu$ of the router pipeline. When the offered load $\lambda$ is low, reducing $f$ primarily increases serialization latency. When $\lambda$ approaches $\mu$, queuing delay dominates and tail latency can rise sharply. Priority-aware DVFS aims to keep $\mu$ high where it most benefits control-class \texttt{P99} (hot spots and critical routes), while reducing $\mu$ in regions that primarily affect batch throughput.
@@ -110,15 +144,46 @@ This limitation is not a concern for our study. Since our primary goal is to gen
 \subsection{Network Simulator}
 The second half of our infrastructure uses BookSim 2.0, a cycle-accurate simulator specifically designed for the Network-on-Chip (NoC). Because we use pre-generated traces from SNIPER, we can run the same traffic patterns through BookSim over and over again while changing only the policies that modify power and frequency settings. This allows us to see precisely how a site-level power cap affects the latency of important data packets.
 
-TODO: DVFS Modeling in Booksim 
-TODO: Class and Traffic Generation
+In addition to standard BookSim metrics, we model DVFS actuation either \emph{globally} (single DVFS
+domain) or \emph{spatially} (multiple domains, up to per-router granularity). Each router maintains a
+continuous \texttt{freq\_scale} that controls how many internal pipeline steps it can advance per BookSim
+cycle. Lower \texttt{freq\_scale} therefore reduces the effective service rate of routing, VC allocation,
+switch allocation, and crossbar traversal, increasing queueing delay and tail latency under load.
+
+Policies execute at fixed DVFS epochs. During an epoch, the simulator collects telemetry including total
+NoC power, per-router queue occupancies, injection/stall rates, and per-class latency percentiles. At the
+epoch boundary, a policy computes the next frequency scale(s), clamped by \texttt{dvfs\_min\_scale} and
+\texttt{dvfs\_max\_scale}, and applied to the configured \texttt{router\_domains}. This mirrors a
+hardware/software DVFS governor where sensors are sampled periodically and new operating points are
+programmed with bounded actuation granularity.
+
+\subsection{Class-aware scheduling and the DVFS control loop}
+Our simulator makes policies class-aware end-to-end. Each injected packet carries a \emph{class ID}
+(synthetic traffic, or trace-defined via \texttt{node\_types} in netrace). A pluggable \texttt{ClassAssigner}
+interface can override or infer classes based on source/destination or runtime signals; in our current
+experiments we use static, trace-provided class labels. Per class, \texttt{ClassConfig} specifies a base
+priority and an optional latency SLO in cycles. When an SLO is present, we track that class's tail latency
+(\texttt{P99}) and treat it as the \emph{control class}.
+
+Class awareness also appears in router scheduling. A \texttt{StaticPriorityPolicy} assigns each flit the
+class's base priority at enqueue time, and a \texttt{DeadlineBoostPolicy} can temporarily increase a
+class's priority when its measured \texttt{P99} exceeds its SLO. This creates a fast path for urgent traffic
+at arbitration time, while DVFS adjusts the \emph{service rate} of the fabric.
+
+Finally, DVFS actuation is applied through a \texttt{NetworkControl} adapter. Policies output either a
+single domain scale (\texttt{SetDomainSpeed}) or per-router scales (\texttt{SetRouterSpeed}). Each router
+tracks a continuous \texttt{freq\_scale}; lowering this value reduces the router pipeline progress executed
+per simulator cycle, increasing effective per-hop service time and queueing. Domain and per-router bounds
+are enforced via \texttt{dvfs\_min\_scale}, \texttt{dvfs\_max\_scale}, and a configurable \texttt{router\_domains}
+partitioning. At each DVFS epoch, the simulator summarizes telemetry (power, occupancy, injection/stall
+rates, and per-class latency percentiles) and the controller computes new scale(s) for the next epoch.
 
 \section{Data}
 \subsection{Trace Format}
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[scale=0.7]{traces.png}
+    \includegraphics[scale=1.1]{traces.png}
     \caption{Example Trace Snippet}
     \label{fig:your_label}
 \end{figure}
@@ -140,37 +205,116 @@ index 5 & control (0) / batch (1) \\ \hline
 }
 
 \subsection{Metrics}
-TODO: put what metrics are collected here
+We collect both power and QoS-oriented performance telemetry at DVFS epoch boundaries:
+(i) total NoC power under the current frequency configuration,
+(ii) per-router input-buffer occupancy (and derived congestion signals),
+(iii) per-router injection and stall rates,
+(iv) per-class delivered-packet latency percentiles (P50/P95/P99),
+and (v) per-class injection and throughput (delivered packets/flits per epoch).
+These signals are sufficient to implement purely power-driven baselines (uniform throttling) as well as
+class-aware controllers that explicitly protect control-class \texttt{P99} under a hard cap.
 
-\section{DVFS Control Policies: TODO}
-\subsection{Reactive Hardware Baseline}
-Our baseline captures a class of low-cost, threshold-driven DVFS governors suitable for pure hardware implementation.
-A representative example is \emph{FreqThrottle}~\cite{mishra_freqtuning_micro09}: routers operate at a reduced base frequency and temporarily accelerate when local congestion is detected.
-More generally, the baseline uses simple rules (e.g., ``boost'' when utilization or buffer occupancy exceeds a high threshold; ``slow'' when it falls below a low threshold) with hysteresis to avoid rapid toggling.
-Such schemes have minimal overhead (comparators and small state), but can be myopic and leave efficiency on the table under complex traffic patterns.
+\section{DVFS Control Policies}
+All DVFS controllers run in discrete \emph{DVFS epochs}. During an epoch, the NoC executes at the
+currently programmed frequency scale(s). At the epoch boundary, the simulator summarizes telemetry
+and the controller computes new scale(s) for the next epoch, subject to a hard NoC power budget.
+We study two baseline policies and three increasingly class-aware controllers.
 
-\subsection{Queue-Theoretic Feedback Control}
-The queue-theoretic policy regulates a chosen queue occupancy metric around a target setpoint.
-Intuitively, growing queues indicate that arrivals exceed service; DVFS increases frequency to raise service rate and drain backlog.
-Conversely, persistently empty queues indicate excess service capacity; DVFS lowers frequency to save power.
-This approach aligns with queueing relationships (e.g., Little's Law) and can yield stable, near-optimal power--delay operating points when properly tuned~\cite{casu_jpdc2017,juang_islped2005}.
+\subsection{Baselines}
+\textbf{Static DVFS (no control).} This baseline fixes the NoC frequency scale (typically 1.0) and never
+adapts. It serves as a reference point for latency and power when the control loop is disabled.
 
-In our implementation, each epoch computes the average queue occupancy over the previous interval and updates the frequency using a feedback rule (e.g., proportional or PI control).
-Key knobs include the queue target and controller gains/step sizes.
-We explicitly study how the epoch length interacts with control gains: short epochs react quickly but may overshoot; longer epochs filter noise but may respond sluggishly.
+\textbf{Uniform throttling (power-cap baseline).} Uniform throttling enforces the NoC power cap by
+applying a \emph{single global} frequency scale to all routers. If total NoC power exceeds the cap,
+the policy reduces this global scale (e.g., linearly) until the estimated power meets the budget; if the
+cap is not exceeded, it runs at the maximum scale. Uniform throttling is intentionally \emph{not}
+class-aware: it reacts only to total power and cannot protect control-class tail latency.
 
-\subsection{Optimal-Control-Inspired Policy}
-The optimal-control policy approximates a power minimization subject to performance constraints.
-Rather than regulating a single signal, it uses a system-level objective, for example:
-minimize energy while meeting a delay target (delay-constrained DVFS)~\cite{casu_date2015},
-or solve a per-epoch optimization using a simplified performance model.
-Practically, this policy can be implemented as:
-(i) a precomputed lookup table mapping observed state to DVFS actions, or
-(ii) a receding-horizon (model-predictive) controller that selects the next frequency by optimizing a short-horizon cost.
-Because it requires either offline model fitting or online optimization, we treat it as a software-assisted or runtime-managed ``upper bound'' relative to purely hardware rules.
+\subsection{HWReactive: threshold governor with SLO override}
+HWReactive models a lightweight hardware DVFS governor. Each epoch it measures a configurable congestion
+signal $X$ (e.g., average queue occupancy, injection rate, stall rate, or observed latency) and compares it
+to low/high thresholds $(T_{\text{low}}, T_{\text{high}})$ with hysteresis. In single-domain mode it toggles
+between $(f_{\text{low}}, f_{\text{high}})$:
+\begin{equation}
+f[n\!+\!1] =
+\begin{cases}
+f_{\max} & \text{if } L^{\text{ctrl}}_{99}[n] > \text{SLO} \\
+f_{\max} & \text{if } L^{\text{ctrl}}_{99}[n] \approx \text{SLO} \\
+f_{\text{high}} & \text{if } X[n] > T_{\text{high}} \\
+f_{\text{low}} & \text{if } X[n] < T_{\text{low}} \\
+f[n] & \text{otherwise (hold)}
+\end{cases}
+\end{equation}
+The key class-aware feature is the \emph{SLO override}: if the control class P99 latency exceeds (or is
+close to) its target, the controller forces a high-frequency state to preserve slack.
+
+In multi-domain (per-router) mode, HWReactive computes a per-router metric $M_i$ and normalizes it to a
+weight $w_i$ (one simple choice is $w_i = \frac{M_i}{\sum_j M_j}$). It then interpolates each router's scale:
+\begin{equation}
+f_i = f_{\text{low}} + w_i \cdot (f_{\text{high}} - f_{\text{low}}), \qquad
+f_i \in [f_{\text{low}}, f_{\text{high}}].
+\end{equation}
+Busy routers receive higher frequency, while idle routers are throttled more aggressively, concentrating
+power where it most reduces queueing delay. The SLO override can still bias the overall allocation upward
+when control-class tail latency is at risk.
+
+\subsection{QueuePID: occupancy-regulating feedback loop with budget normalization}
+QueuePID treats DVFS as service-rate control and regulates router input-buffer occupancy around a target.
+Let $O_i[n]$ be the measured occupancy of router/domain $i$ at epoch $n$ and $T_i[n]$ be its target. The
+error is $e_i[n] = O_i[n] - T_i[n]$. A per-router PID loop computes a frequency update:
+\begin{align}
+P_i[n] &= K_P e_i[n] \\
+I_i[n] &= I_i[n-1] + K_I e_i[n] \\
+D_i[n] &= K_D (e_i[n] - e_i[n-1]) \\
+\Delta f_i[n] &= P_i[n] + I_i[n] + D_i[n] \\
+f_i[n\!+\!1] &= \text{clamp}(f_i[n] + \Delta f_i[n], f_{\min}, f_{\max}).
+\end{align}
+To bias power toward hot spots, QueuePID uses \emph{adaptive occupancy targets}: routers with higher
+relative load are assigned lower $T_i$ (forcing speed-up), while lightly loaded routers are assigned higher
+$T_i$ (allowing slowdown). After computing candidate $f_i$, the controller enforces the global power cap by
+a normalization step that preserves relative differences:
+\begin{equation}
+\text{if } P_{\text{NoC}} > P_{\text{cap}},\ \alpha = \frac{P_{\text{cap}}}{P_{\text{NoC}}},\ \ \forall i:\ f_i \leftarrow \alpha f_i.
+\end{equation}
+Class awareness enters through the same control-class P99 feedback used by HWReactive: when
+$L^{\text{ctrl}}_{99}$ violates (or approaches) its SLO, QueuePID biases the update upward and can force
+$f_{\max}$ in the single-domain case. Conceptually, occupancy regulation becomes subordinate to SLO
+protection whenever they conflict.
+
+\subsection{PerfTarget: direct P99 targeting}
+PerfTarget closes the loop around the metric of interest: control-class tail latency. Let
+$L^{\text{ctrl}}_{99}[n]$ be the measured control P99 at epoch $n$ and $L_{\text{target}}$ be the setpoint.
+Define latency error $e_L[n] = L^{\text{ctrl}}_{99}[n] - L_{\text{target}}$. A simple proportional form is:
+\begin{equation}
+f[n\!+\!1] = \text{clamp}\Big(f[n] + K_L \cdot \frac{e_L[n]}{L_{\text{target}}},\ f_{\min}, f_{\max}\Big),
+\end{equation}
+implemented with step sizes and hysteresis in practice. If the control class has no completed packets in an
+epoch (no P99 sample), the controller holds its previous decision rather than making a blind adjustment.
+When the control class has ample slack and power headroom, PerfTarget gently reduces frequency to reclaim
+power.
+
+In per-router mode, PerfTarget uses occupancy as a spatial hint to \emph{localize} DVFS action under a tight
+cap: when P99 is high, it boosts high-occupancy routers (likely on the critical path) while throttling cold
+routers to remain within the budget. This approximates a constrained optimization of ``meet $L_{\text{target}}$
+subject to $P_{\text{cap}}$'' without an expensive solver.
+
+\subsection{Why multi-domain, class-aware DVFS helps}
+Across all three controllers, multi-domain actuation is the key feature that uniform throttling is missing: it
+allows the policy to \emph{reallocate} limited power toward routers that most influence queueing delay for
+latency-critical traffic, while extracting power from regions that primarily affect batch throughput. Combined
+with class-aware telemetry (control P99) and, optionally, priority boosting at arbitration, these policies aim
+to preserve control-class tail latency under site-level caps where uniform DVFS would degrade all traffic
+equally.
 
 \section*{Acknowledgment}
 We would like to express our sincere gratitude to Professor Sagar Karandikar for his guidance and support throughout this project. His expertise in the course CS 294-252: Architectures and Systems for Warehouse-Scale Computers was instrumental in shaping the direction of this research. We also want to thank my classmates for their valuable suggestions and feedback during our in-class discussions, which helped refine our approach to priority-aware power management. Finally, we are grateful for the resources provided by the University of California, Berkeley, which made this work possible.
+
+\section*{Evaluation}
+
+\section*{Conclusion}
+
+\section*{Future Work}
+
 
 \begin{thebibliography}{00}
 
